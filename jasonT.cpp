@@ -1,5 +1,13 @@
 // Jason Thai
 // Duck Hunt
+// Lab 6 / Homework 3
+// 
+// what i'm working on:
+// movement and physics
+// collision detection
+// score keeping
+// allocation/deallocation
+// mouse/keyboard inputs
 
 #include <iostream>
 #include <cstdlib>
@@ -11,7 +19,7 @@
 #include <GL/glx.h>
 #include "ppm.h"
 #include <stdio.h>
-#include <unistd.h> //for sleep function
+#include <unistd.h> //for sleep function ??
 
 //800, 600
 #define WINDOW_WIDTH  800
@@ -90,7 +98,7 @@ struct freeDuck
 {
     Shape s;
     Vec velocity;
-    //struct timespec time;
+    //struct timespec time;  <-- for sprite animation?
     struct freeDuck *prev;
     struct freeDuck *next;
     freeDuck()
@@ -176,7 +184,7 @@ struct Game {
 	box[3].center.y = WINDOW_HEIGHT - (WINDOW_HEIGHT - floor) - (floor / 1.5);
 	box[3].center.z = 0;
 
-	//score on shot
+	//score on shot  <-- still working on it
 	box[4].width = 45;
 	box[4].height = 35;
 	box[4].center.x = 0;
@@ -185,14 +193,8 @@ struct Game {
     }
 };
 
-//Function prototypes
-void initXWindows(void);
-void init_opengl(void);
-void cleanupXWindows(void);
 void check_mouse(XEvent *e, Game *game);
-int check_keys(XEvent *e, Game *game);
 void movement(Game *game);
-void render(Game *game);
 void makeDuck(Game *game);
 void makeDeadDuck(Game *game);
 void makeFreeDuck(Game *game);
@@ -201,217 +203,11 @@ void deleteDuck(Game *game, Duck *duck);
 void deleteDeadDuck(Game *game, deadDuck *deadD);
 void deleteFreeDuck(Game *game, freeDuck *freeD);
 void deleteDog(Game *game, Dog *dog);
-void check_resize(XEvent *e);
-
-Ppmimage *backgroundImage = NULL;
-GLuint backgroundTexture;
-int background = 1;
-
-int main(void)
-{
-    int done=0;
-    srand(time(NULL));
-    initXWindows();
-    init_opengl();
-
-    clock_gettime(CLOCK_REALTIME, &timePause);
-    clock_gettime(CLOCK_REALTIME, &timeStart);
-    //declare game object
-    Game game;
-
-    //start animation
-    while(!done) {
-	while(XPending(dpy)) {
-	    XEvent e;
-	    XNextEvent(dpy, &e);
-	    check_resize(&e);
-	    check_mouse(&e, &game);
-	    done = check_keys(&e, &game);
-	}
-	clock_gettime(CLOCK_REALTIME, &timeCurrent);
-	timeSpan = timeDiff(&timeStart, &timeCurrent);
-	timeCopy(&timeStart, &timeCurrent);
-	movementCountdown += timeSpan;
-	while(movementCountdown >= movementRate)
-	{
-	    movement(&game);
-	    movementCountdown -= movementRate;
-	}
-	render(&game);
-	glXSwapBuffers(dpy, win);
-    }
-    cleanupXWindows();
-    cleanup_fonts();
-    return 0;
-}
-
-void set_title(void)
-{
-    //Set the window title bar.
-    XMapWindow(dpy, win);
-    XStoreName(dpy, win, "Duck Hunt");
-}
-
-void cleanupXWindows(void) {
-    //do not change
-    XDestroyWindow(dpy, win);
-    XCloseDisplay(dpy);
-}
-
-void initXWindows(void) {
-    //do not change
-    GLint att[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
-    int w=WINDOW_WIDTH, h=WINDOW_HEIGHT;
-
-    XSetWindowAttributes swa;
-
-    dpy = XOpenDisplay(NULL);
-    if (dpy == NULL) {
-	std::cout << "\n\tcannot connect to X server\n" << std::endl;
-	exit(EXIT_FAILURE);
-    }
-    Window root = DefaultRootWindow(dpy);
-    XVisualInfo *vi = glXChooseVisual(dpy, 0, att);
-    if(vi == NULL) {
-	std::cout << "\n\tno appropriate visual found\n" << std::endl;
-	exit(EXIT_FAILURE);
-    } 
-    Colormap cmap = XCreateColormap(dpy, root, vi->visual, AllocNone);
-    //XSetWindowAttributes swa;
-    swa.colormap = cmap;
-    swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask |
-	ButtonPress | ButtonReleaseMask |
-	PointerMotionMask |
-	StructureNotifyMask | SubstructureNotifyMask;
-    win = XCreateWindow(dpy, root, 0, 0, w, h, 0, vi->depth,
-	    InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
-    set_title();
-    glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
-    glXMakeCurrent(dpy, win, glc);
-}
-
-void reshape_window(int width, int height)
-{
-    glViewport(0, 0, (GLint)width, (GLint)height);
-    glMatrixMode(GL_PROJECTION); glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW); glLoadIdentity();
-    glOrtho(0, WINDOW_WIDTH, 0, WINDOW_HEIGHT, -1, 1);
-    set_title();
-}
-
-unsigned char *buildAlphaData(Ppmimage *img) {
-    // add 4th component to RGB stream...
-    int a,b,c;
-    unsigned char *newdata, *ptr;
-    unsigned char *data = (unsigned char *)img->data;
-    //newdata = (unsigned char *)malloc(img->width * img->height * 4);
-    newdata = new unsigned char[img->width * img->height * 4];
-    ptr = newdata;
-    for (int i=0; i<img->width * img->height * 3; i+=3) {
-	a = *(data+0);
-	b = *(data+1);
-	c = *(data+2);
-	*(ptr+0) = a;
-	*(ptr+1) = b;
-	*(ptr+2) = c;
-	//
-	//get the alpha value
-	//
-	//original code
-	//get largest color component...
-	//*(ptr+3) = (unsigned char)((
-	//      (int)*(ptr+0) +
-	//      (int)*(ptr+1) +
-	//      (int)*(ptr+2)) / 3);
-	//d = a;
-	//if (b >= a && b >= c) d = b;
-	//if (c >= a && c >= b) d = c;
-	//*(ptr+3) = d;
-	//
-	//new code, suggested by Chris Smith, Fall 2013
-	*(ptr+3) = (a|b|c);
-	//
-	ptr += 4;
-	data += 3;
-    }
-    return newdata;
-}
-
-void init_opengl(void)
-{
-    //OpenGL initialization
-    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-    //Initialize matrices
-    glMatrixMode(GL_PROJECTION); glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW); glLoadIdentity();
-    //Set 2D mode (no perspective)
-    glOrtho(0, WINDOW_WIDTH, 0, WINDOW_HEIGHT, -1, 1);
-
-    //added for background
-    glDisable(GL_LIGHTING);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_FOG);
-    glDisable(GL_CULL_FACE);
-    //clear the screen
-    glClearColor(1.0, 1.0, 1.0, 1.0);
-    backgroundImage = ppm6GetImage("./images/background.ppm");
-    //
-    //create opengl texture elements
-    glGenTextures(1, &backgroundTexture);
-    //background
-    glBindTexture(GL_TEXTURE_2D, backgroundTexture);
-    //
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, backgroundImage->width, backgroundImage->height, 0, GL_RGB, GL_UNSIGNED_BYTE, backgroundImage->data); 
-    //Set the screen background color
-    //glClearColor(0.1, 0.1, 0.1, 1.0);
-    glEnable(GL_TEXTURE_2D);
-    initialize_fonts();
-}
-
-void makeDuck(Game *game, float x, float y)
-{
-    if(game->n >= MAX_DUCKS)
-	return;
-    struct timespec dt;
-    clock_gettime(CLOCK_REALTIME, &dt);
-    timeCopy(&game->duckTimer, &dt);
-    int directionNum = rand() % 101;
-    Duck *d;
-    try
-    {
-	d = new Duck;
-    }
-    catch(std::bad_alloc)
-    {
-	return;
-    }
-    timeCopy(&d->time, &dt);
-    d->s.center.x = x;
-    d->s.center.y = y;
-    d->s.center.z = 0.0;
-    if(directionNum >= 50)
-	d->velocity.x = 4.0 * (game->rounds * .5);
-    else
-	d->velocity.x = -4.0 * (game->rounds * .5);
-    d->velocity.y = 4.0 * (game->rounds * .5);
-    d->velocity.z = 0.0;
-    d->s.width = 50.0;
-    d->s.height = 50.0;
-    d->next = game->duck;
-    if(game->duck != NULL)
-    {
-	game->duck->prev = d;
-    }
-    game->duck = d;
-    game->n++;
-}
 
 void makeDeadDuck(Game *game, Duck *duck)
 {
-    //if(game->n >= MAX_DUCKS)
-    //	return;
+    //if(game->n >= MAX_DUCKS)	<-- keep just in case
+    //  return;
     struct timespec dt;
     clock_gettime(CLOCK_REALTIME, &dt);
     timeCopy(&game->duckTimer, &dt);
@@ -429,7 +225,6 @@ void makeDeadDuck(Game *game, Duck *duck)
     dd->s.center.y = duck->s.center.y;
     dd->s.center.z = 0.0;
     dd->velocity.x = 0.0;
-    //dd->velocity.y = -3.5;
     dd->velocity.z = 0.0;
     dd->s.width = 50.0;
     dd->s.height = 50.0;
@@ -444,10 +239,10 @@ void makeDeadDuck(Game *game, Duck *duck)
 void makeFreeDuck(Game *game, Duck *duck)
 {
     //if(game->n >= MAX_DUCKS)
-    //	return;
+    //  return;
     //struct timespec dt;
     //clock_gettime(CLOCK_REALTIME, &dt);
-    //timeCopy(&game->duckTimer, &dt);
+    //timeCopy(&game->duckTimer, &dt);		<-- might need for sprite animation
     freeDuck *fd;
     try
     {
@@ -474,15 +269,14 @@ void makeFreeDuck(Game *game, Duck *duck)
     game->freeD = fd;
 }
 
-
-void makeDog(Game *game, float x, float y)
+void makeDog(Game *game, float x, float y)	// <-- working on dog
 {
     //if(game->n >= MAX_DUCKS)
-    //	return;
+    //  return;
     struct timespec dt;
     clock_gettime(CLOCK_REALTIME, &dt);
     timeCopy(&game->dogTimer, &dt);
-    //std::cout << "makeDog() " << x << " " << y << std::endl;
+    //std::cout << "makeDog() " << x << " " << y << std::endl;	// <-- for debugging
     Dog *doge;
     try
     {
@@ -509,18 +303,7 @@ void makeDog(Game *game, float x, float y)
     game->dog = doge;
 }
 
-void check_resize(XEvent *e)
-{
-    if(e->type != ConfigureNotify)
-	return;
-    XConfigureEvent xce = e->xconfigure;
-    if(xce.width != WINDOW_WIDTH || xce.height != WINDOW_HEIGHT)
-    {
-	reshape_window(xce.width, xce.height);
-    }
-}
-
-void check_mouse(XEvent *e, Game *game)
+void check_mouse(XEvent *e, Game *game)		// <-- plan to make it shorter
 {
     int y = WINDOW_HEIGHT - e->xbutton.y;
 
@@ -537,7 +320,7 @@ void check_mouse(XEvent *e, Game *game)
 	if (e->xbutton.button==1) {
 	    //Left button was pressed
 	    while(d)
-	    {	
+	    {
 		if(e->xbutton.x >= d->s.center.x - d->s.width &&
 			e->xbutton.x <= d->s.center.x + d->s.width &&
 			y <= d->s.center.y + d->s.height &&
@@ -552,7 +335,7 @@ void check_mouse(XEvent *e, Game *game)
 		    saved = d->next;
 		    deleteDuck(game, d);
 		    d = saved;
-		    game->bullets--;	
+		    game->bullets--;
 		    game->duckShot++;
 		    if(game->bullets < 1)
 		    {
@@ -567,7 +350,7 @@ void check_mouse(XEvent *e, Game *game)
 		    }
 		    return;
 		}
-		if(game->n == 2)
+		if(game->n == 2)	// <-- copy/paste, plan to make a separate function or something
 		{
 		    d = d->next;
 		    if(e->xbutton.x >= d->s.center.x - d->s.width &&
@@ -619,7 +402,7 @@ void check_mouse(XEvent *e, Game *game)
 		    }
 		    return;
 		}
-		game->bullets--;	
+		game->bullets--;
 		d = d->next;
 	    }
 	}
@@ -674,7 +457,7 @@ int check_keys(XEvent *e, Game *game)
 	    {
 		deleteDuck(game, d);
 		d = d->next;
-	    }	
+	    }
 	    while(doge)
 	    {
 		deleteDog(game, doge);
@@ -777,9 +560,8 @@ void movement(Game *game)
 	d->s.center.x += d->velocity.x;
 	d->s.center.y += d->velocity.y;
 
-	d = d->next;	
+	d = d->next;
     }
-
     while(dd)
     {
 	double ts = timeDiff(&dd->time, &dt);
@@ -817,7 +599,7 @@ void movement(Game *game)
 	fd = fd->next;
     }
 
-    while(doge)
+    while(doge)		// <-- working on it
     {
 	double ts = timeDiff(&doge->time, &dt);
 	if(ts > 5.0)
@@ -840,222 +622,6 @@ void movement(Game *game)
 
 	doge = doge->next;
     }
-}
-
-void render(Game *game)
-{
-    float w, h, x, y;
-    Duck *d = game->duck;
-    deadDuck *dd = game->deadD;
-    freeDuck *fd = game->freeD;
-    //Dog *doge = game->dog;
-
-    glColor3ub(255, 255, 255);
-
-    glClearColor(1.0, 1.0, 1.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    if(background) {
-	glBindTexture(GL_TEXTURE_2D, backgroundTexture);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
-	glTexCoord2f(0.0f, 0.0f); glVertex2i(0, WINDOW_HEIGHT);
-	glTexCoord2f(1.0f, 0.0f); glVertex2i(WINDOW_WIDTH, WINDOW_HEIGHT);
-	glTexCoord2f(1.0f, 1.0f); glVertex2i(WINDOW_WIDTH, 0);
-	glEnd();
-    }
-    glDisable(GL_TEXTURE_2D);
-    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    //Drawing Shapes
-    glColor3ub(255, 255, 255);
-    glBegin(GL_LINES);
-    glVertex2f(0.0, game->floor);
-    glVertex2f(WINDOW_WIDTH, game->floor);
-    glEnd();
-
-    //GERARDO
-    //Printing text in Boxes
-    Rect r;
-    //  glClear(GL_COLOR_BUFFER_BIT);
-    r.bot = WINDOW_HEIGHT - 550;
-    r.left = WINDOW_WIDTH - 715;
-    r.center = 0;
-
-    //Drawing Boxes
-    Shape *s;
-    glColor3ub(90, 140, 90);
-    s = &game->box[0];
-    glPushMatrix();
-    glTranslatef(s->center.x, s->center.y, s->center.z);
-    w = s->width;
-    h = s->height;
-    r.bot = s->height;
-    r.left = s->width;
-    glVertex2i(-w, -h);
-    glVertex2i(-w, h);
-    glVertex2i(w, h);
-    glVertex2i(w, -h);
-    glEnd();
-    ggprint16(&r , 16, 0x00ffffff, "%i", game->bullets);
-    glPopMatrix();
-
-    glColor3ub(90, 140, 90);
-    s = &game->box[1];
-    glPushMatrix();
-    glTranslatef(s->center.x, s->center.y, s->center.z);
-    w = s->width;
-    h = s->height;
-    r.bot = s->height;
-    r.left = s->width;
-    glVertex2i(-w, -h);
-    glVertex2i(-w, h);
-    glVertex2i(w, h);
-    glVertex2i(w, -h);
-    glEnd();
-    if(!d && game->duckCount >= 10 && game->duckShot < 6)
-    {
-	ggprint16(&r , 16, 0x00ffffff, "GAME OVER");
-    }
-    ggprint16(&r , 16, 0x00ffffff, "%i / 10", game->duckShot);
-    glPopMatrix();
-
-    glColor3ub(90, 140, 90);
-    s = &game->box[2];
-    glPushMatrix();
-    glTranslatef(s->center.x, s->center.y, s->center.z);
-    w = s->width;
-    h = s->height;
-    r.bot = s->height;
-    r.left = s->width;
-    glVertex2i(-w, -h);
-    glVertex2i(-w, h);
-    glVertex2i(w, h);
-    glVertex2i(w, -h);
-    glEnd();
-    ggprint16(&r , 16, 0x00ffffff, "%i", game->score);
-    glPopMatrix();
-
-    glColor3ub(90, 140, 90);
-    s = &game->box[3];
-    glPushMatrix();
-    glTranslatef(s->center.x, s->center.y, s->center.z);
-    w = s->width;
-    h = s->height;
-    r.bot = s->height;
-    r.left = s->width;
-    glVertex2i(-w, -h);
-    glVertex2i(-w, h);
-    glVertex2i(w, h);
-    glVertex2i(w, -h);
-    glEnd();
-    ggprint16(&r , 16, 0x00ffffff, "%i", game->rounds);
-    glPopMatrix();
-    
-    if((game->oneDuck || game->twoDuck))
-    {
-	if(!d && game->duckCount >= 10 && game->duckShot >= 6)
-	{
-	    game->rounds++;
-	    game->duckCount = 0;
-	    game->duckShot = 0;
-	}
-	if(!d && game->duckCount >= 10 && game->duckShot < 6)
-	{
-	    while(d)
-	    {
-		deleteDuck(game, d);
-		d = d->next;
-	    }
-	    game->oneDuck = false;
-	    game->twoDuck = false;
-	    std::cout << "GAME OVER" << std::endl;
-	}
-	if(!d && game->oneDuck && game->duckCount < 10)
-	{
-	    game->bullets = 3;
-	    makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
-	    game->duckCount++;
-	}
-	if(!d && game->twoDuck && game->duckCount < 9)
-	{
-	    game->bullets = 3;
-	    makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
-	    makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
-	    game->duckCount += 2;
-	}
-    }
-
-    glColor3ub(255, 255, 255);
-    while(d)
-    {
-	w = d->s.width;
-	h = d->s.height;
-	x = d->s.center.x;
-	y = d->s.center.y;
-	glBegin(GL_QUADS);
-	glVertex2f(x-w, y+h);
-	glVertex2f(x-w, y-h);
-	glVertex2f(x+w, y-h);
-	glVertex2f(x+w, y+h);
-	glEnd();
-	d = d->next;
-    }
-
-    glColor3ub(255, 0, 0);
-    while(dd)
-    {
-	w = dd->s.width;
-	h = dd->s.height;
-	x = dd->s.center.x;
-	y = dd->s.center.y;
-	glBegin(GL_QUADS);
-	glVertex2f(x-w, y+h);
-	glVertex2f(x-w, y-h);
-	glVertex2f(x+w, y-h);
-	glVertex2f(x+w, y+h);
-	glEnd();
-	dd = dd->next;
-    }
-    
-    glColor3ub(0, 0, 255);
-    while(fd)
-    {
-	w = fd->s.width;
-	h = fd->s.height;
-	x = fd->s.center.x;
-	y = fd->s.center.y;
-	glBegin(GL_QUADS);
-	glVertex2f(x-w, y+h);
-	glVertex2f(x-w, y-h);
-	glVertex2f(x+w, y-h);
-	glVertex2f(x+w, y+h);
-	glEnd();
-	fd = fd->next;
-    }
-
-    /*if(game->animateDog)
-      {
-      makeDog(game, 51, game->floor + 51);
-      }
-      glColor3ub(255, 255, 255);
-      while(doge)
-      {
-      w = doge->s.width;
-      h = doge->s.height;
-      x = doge->s.center.x;
-      y = doge->s.center.y;
-      glBegin(GL_QUADS);
-      glVertex2f(x-w, y+h);
-      glVertex2f(x-w, y-h);
-      glVertex2f(x+w, y-h);
-      glVertex2f(x+w, y+h);
-      glEnd();
-      doge = doge->next;
-      }*/
-
 }
 
 void deleteDuck(Game *game, Duck *node)
@@ -1149,7 +715,7 @@ void deleteFreeDuck(Game *game, freeDuck *node)
     node = NULL;
 }
 
-void deleteDog(Game *game, Dog *node)
+void deleteDog(Game *game, Dog *node)	// <-- working on it
 {
     if(node->prev == NULL)
     {
@@ -1178,3 +744,4 @@ void deleteDog(Game *game, Dog *node)
     delete node;
     node = NULL;
 }
+
