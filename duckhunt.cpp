@@ -79,7 +79,7 @@ struct deadDuck
     struct timespec time;
     struct deadDuck *prev;
     struct deadDuck *next;
-    bool dGone;
+    bool points;
     deadDuck()
     {
 	prev = NULL;
@@ -91,10 +91,8 @@ struct freeDuck
 {
     Shape s;
     Vec velocity;
-    //struct timespec time;
     struct freeDuck *prev;
     struct freeDuck *next;
-    bool fGone;
     freeDuck()
     {
 	prev = NULL;
@@ -102,6 +100,7 @@ struct freeDuck
     }
 };
 
+////////////////////////////////////////////////
 struct Dog
 {
     Shape s;
@@ -109,7 +108,6 @@ struct Dog
     struct timespec time;
     struct Dog *prev;
     struct Dog *next;
-    //bool dGone;
     Dog()
     {
 	prev = NULL;
@@ -124,7 +122,6 @@ struct happyDog
     struct timespec time;
     struct happyDog *prev;
     struct happyDog *next;
-    //bool hGone;
     happyDog()
     {
 	prev = NULL;
@@ -139,56 +136,58 @@ struct laughingDog
     struct timespec time;
     struct laughingDog *prev;
     struct laughingDog *next;
-    //bool lGone;
     laughingDog()
     {
 	prev = NULL;
 	next = NULL;
     }
 };
+//////////////////////////////////////////////////
 
 struct Game {
-    int bullets, n, rounds, score, duckCount, duckShot, onScreen, duckCaptured;
+    int bullets, n, rounds, score, duckCount, duckShot, onScreen, duckCaptured;  // <-- duckCaptured
     Duck *duck;
     deadDuck *deadD;
     freeDuck *freeD;
-    Dog *dog;
-    happyDog *hdog;
-    laughingDog *ldog;
+    Dog *dog;    //////////////////////
+    happyDog *hdog;  ////////////////////
+    laughingDog *ldog;   //////////////////
     float floor;
-    struct timespec duckTimer, dogTimer;
+    struct timespec duckTimer, dogTimer; // <-- dogTimer
     Shape box[6];
-    bool oneDuck, twoDuck, animateDog, dogGone, afterDog;
+    bool oneDuck, twoDuck, animateDog, dogGone, afterDog, waitForDog; // <-- animateDog,dogGone,afterDog,waitForDog
     ~Game()
     {
 	delete duck;
 	delete deadD;
 	delete freeD;
-	delete dog;
-	//delete hdog;
-	//delete ldog;
+	delete dog;  ///////////////
+	delete hdog;  ///////////////
+	delete ldog;  /////////////////
     }
     Game()
     {
 	duck = NULL;
 	deadD = NULL;
 	freeD = NULL;
-	dog = NULL;
+	dog = NULL;  //////////////////
+	hdog = NULL;  /////////////////
+	ldog = NULL;  //////////////////
 	bullets = 0;
 	n = 0;
-	onScreen = 0;
 	floor = WINDOW_HEIGHT / 5.0;
 	rounds = 1;
 	score = 0;
 	duckCount = 0;
 	duckShot = 0;
 	onScreen = 0;
-	duckCaptured = 0;
+	duckCaptured = 0;  ///////////////////
 	oneDuck = false;
 	twoDuck = false;
-	animateDog = false;
-	dogGone = true;
-	afterDog = false;
+	animateDog = false;   //////////////////////
+	dogGone = true;  /////////////////////
+	afterDog = false;  ////////////////////////
+	waitForDog = true;  ///////////////////////
 
 	//bullet
 	box[0].width = 45;
@@ -238,15 +237,15 @@ void render(Game *game);
 void makeDuck(Game *game);
 void makeDeadDuck(Game *game);
 void makeFreeDuck(Game *game);
-void makeDog(Game *game);
-void makeHappyDog(Game *game);
-void makeLaughingDog(Game *game);
+void makeDog(Game *game);   //////////////////////////////
+void makeHappyDog(Game *game);  //////////////////////////////
+void makeLaughingDog(Game *game);  ///////////////////////////////
 void deleteDuck(Game *game, Duck *duck);
 void deleteDeadDuck(Game *game, deadDuck *deadD);
 void deleteFreeDuck(Game *game, freeDuck *freeD);
-void deleteDog(Game *game, Dog *dog);
-void deleteHappyDog(Game *game, happyDog *dog);
-void deleteLaughingDog(Game *game, laughingDog *dog);
+void deleteDog(Game *game, Dog *dog);  /////////////////////////////////
+void deleteHappyDog(Game *game, happyDog *dog);  ////////////////////////////
+void deleteLaughingDog(Game *game, laughingDog *dog);  ///////////////////////////
 void check_resize(XEvent *e);
 
 Ppmimage *backgroundImage = NULL;
@@ -522,15 +521,14 @@ void makeFreeDuck(Game *game, Duck *duck)
     game->onScreen++;
 }
 
-
+/////////////////////////////////////////////////////////////////////////////////////
 void makeDog(Game *game, float x, float y)
 {
-    //if(game->n >= MAX_DUCKS)
+    //if(!game->dogGone)
     //	return;
     struct timespec dt;
     clock_gettime(CLOCK_REALTIME, &dt);
     timeCopy(&game->dogTimer, &dt);
-    //std::cout << "makeDog() " << x << " " << y << std::endl;
     Dog *doge;
     try
     {
@@ -556,17 +554,16 @@ void makeDog(Game *game, float x, float y)
     }
     game->dog = doge;
     game->animateDog = true;
-    game->dogGone = false;
+    //game->dogGone = false;
 }
 
 void makeHappyDog(Game *game, float x, float y)
 {
-    //if(game->n >= MAX_DUCKS)
+    //if(!game->afterDog)
     //	return;
     struct timespec dt;
     clock_gettime(CLOCK_REALTIME, &dt);
     timeCopy(&game->dogTimer, &dt);
-    //std::cout << "makeDog() " << x << " " << y << std::endl;
     happyDog *hdoge;
     try
     {
@@ -581,7 +578,7 @@ void makeHappyDog(Game *game, float x, float y)
     hdoge->s.center.y = y;
     hdoge->s.center.z = 0.0;
     hdoge->velocity.x = 0.0;
-    hdoge->velocity.y = 1.0;
+    hdoge->velocity.y = 2.0;
     hdoge->velocity.z = 0.0;
     hdoge->s.width = 50.0;
     hdoge->s.height = 50.0;
@@ -591,18 +588,18 @@ void makeHappyDog(Game *game, float x, float y)
 	game->hdog->prev = hdoge;
     }
     game->hdog = hdoge;
-    game->animateDog = true;
-    game->dogGone = false;
+    //game->animateDog = true;
+    game->afterDog = true;
+    game->waitForDog = true;
 }
 
 void makeLaughingDog(Game *game, float x, float y)
 {
-    //if(game->n >= MAX_DUCKS)
+    //if(!game->afterDog)
     //	return;
     struct timespec dt;
     clock_gettime(CLOCK_REALTIME, &dt);
     timeCopy(&game->dogTimer, &dt);
-    //std::cout << "makeDog() " << x << " " << y << std::endl;
     laughingDog *ldoge;
     try
     {
@@ -617,7 +614,7 @@ void makeLaughingDog(Game *game, float x, float y)
     ldoge->s.center.y = y;
     ldoge->s.center.z = 0.0;
     ldoge->velocity.x = 0.0;
-    ldoge->velocity.y = 1.0;
+    ldoge->velocity.y = 2.0;
     ldoge->velocity.z = 0.0;
     ldoge->s.width = 50.0;
     ldoge->s.height = 50.0;
@@ -627,9 +624,11 @@ void makeLaughingDog(Game *game, float x, float y)
 	game->ldog->prev = ldoge;
     }
     game->ldog = ldoge;
-    game->animateDog = true;
-    game->dogGone = false;
+    //game->animateDog = true;
+    game->afterDog = true;
+    game->waitForDog = true;
 }
+///////////////////////////////////////////////////////////////////////////////////////////
 
 void check_resize(XEvent *e)
 {
@@ -665,12 +664,18 @@ void check_mouse(XEvent *e, Game *game)
 			y <= d->s.center.y + d->s.height &&
 			y >= d->s.center.y - d->s.height)
 		{
+		    makeDeadDuck(game, d);
 		    ts = timeDiff(&d->time, &dt);
 		    if(ts < 1.5)
+		    {
+			game->deadD->points = true;  /////////////////////////////////
 			game->score += 200;
+		    }
 		    else
+		    {
+			game->deadD->points = false;  ///////////////////////////////////
 			game->score += 100;
-		    makeDeadDuck(game, d);
+		    }
 		    saved = d->next;
 		    deleteDuck(game, d);
 		    d = saved;
@@ -698,12 +703,18 @@ void check_mouse(XEvent *e, Game *game)
 			    y <= d->s.center.y + d->s.height &&
 			    y >= d->s.center.y - d->s.height)
 		    {
+			makeDeadDuck(game, d);
 			ts = timeDiff(&d->time, &dt);
 			if(ts < 1.5)
+			{
+			    game->deadD->points = true;  /////////////////////////////////////
 			    game->score += 200;
+			}
 			else
+			{
+			    game->deadD->points = false;  /////////////////////////////////////
 			    game->score += 100;
-			makeDeadDuck(game, d);
+			}
 			saved = d->prev;
 			deleteDuck(game, d);
 			d = saved;
@@ -755,10 +766,16 @@ void check_mouse(XEvent *e, Game *game)
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////  check everything below here
 int check_keys(XEvent *e, Game *game)
 {
     Duck *d = game->duck;
+    deadDuck *dd = game->deadD;
+    freeDuck *fd = game->freeD;
     Dog *doge = game->dog;
+    happyDog *hdoge = game->hdog;
+    laughingDog *ldoge = game->ldog;
+
     //Was there input from the keyboard?
     if (e->type == KeyPress) {
 	int key = XLookupKeysym(&e->xkey, 0);
@@ -773,10 +790,30 @@ int check_keys(XEvent *e, Game *game)
 		deleteDuck(game, d);
 		d = d->next;
 	    }
+	    while(dd)
+	    {
+		deleteDeadDuck(game, dd);
+		dd = dd->next;
+	    }
+	    while(fd)
+	    {
+		deleteFreeDuck(game, fd);
+		fd = fd->next;
+	    }
 	    while(doge)
 	    {
 		deleteDog(game, doge);
 		doge = doge->next;
+	    }
+	    while(hdoge)
+	    {
+		deleteHappyDog(game, hdoge);
+		hdoge = hdoge->next;
+	    }
+	    while(ldoge)
+	    {
+		deleteLaughingDog(game, ldoge);
+		ldoge = ldoge->next;
 	    }
 	    game->n = 0;
 	    game->onScreen = 0;
@@ -786,19 +823,12 @@ int check_keys(XEvent *e, Game *game)
 	    game->bullets = 3;
 	    game->score = 0;
 	    game->duckCaptured = 0;
-	    if(!game->oneDuck)
-		game->oneDuck = true;
-	    else
-		game->oneDuck = false;
+	    game->oneDuck = true;
 	    game->twoDuck = false;
-	    if(!game->animateDog)
-		game->animateDog = true;
-	    else
-		game->animateDog = false;
-	    if(!game->dogGone)
-		game->dogGone = true;
-	    else
-		game->dogGone = false;
+	    game->animateDog = true;
+	    game->dogGone = false;
+	    game->afterDog = true;
+	    game->waitForDog = false;
 	}
 	if(key == XK_2)
 	{
@@ -807,10 +837,30 @@ int check_keys(XEvent *e, Game *game)
 		deleteDuck(game, d);
 		d = d->next;
 	    }	
+	    while(dd)
+	    {
+		deleteDeadDuck(game, dd);
+		dd = dd->next;
+	    }
+	    while(fd)
+	    {
+		deleteFreeDuck(game, fd);
+		fd = fd->next;
+	    }
 	    while(doge)
 	    {
 		deleteDog(game, doge);
 		doge = doge->next;
+	    }
+	    while(hdoge)
+	    {
+		deleteHappyDog(game, hdoge);
+		hdoge = hdoge->next;
+	    }
+	    while(ldoge)
+	    {
+		deleteLaughingDog(game, ldoge);
+		ldoge = ldoge->next;
 	    }
 	    game->n = 0;
 	    game->onScreen = 0;
@@ -820,19 +870,12 @@ int check_keys(XEvent *e, Game *game)
 	    game->bullets = 3;
 	    game->score = 0;
 	    game->duckCaptured = 0;
-	    if(!game->twoDuck)
-		game->twoDuck = true;
-	    else
-		game->twoDuck = false;
 	    game->oneDuck = false;
-	    if(!game->animateDog)
-		game->animateDog = true;
-	    else
-		game->animateDog = false;
-	    if(!game->dogGone)
-		game->dogGone = true;
-	    else
-		game->dogGone = false;
+	    game->twoDuck = true;
+	    game->animateDog = true;
+	    game->dogGone = false;
+	    game->afterDog = true;
+	    game->waitForDog = false;
 	}
     }
     return 0;
@@ -849,7 +892,6 @@ void movement(Game *game)
     struct timespec dt;
     clock_gettime(CLOCK_REALTIME, &dt);
     int randDirectionNumX, randDirectionNumY;
-    double ts;
 
     if (game->n < 0)
 	return;
@@ -861,6 +903,7 @@ void movement(Game *game)
 	randDirectionNumY = rand() % 101;
 	if(ts > 5.0)
 	{
+	    makeFreeDuck(game, d);
 	    Duck *saved = d->next;
 	    deleteDuck(game, d);
 	    d = saved;
@@ -932,9 +975,13 @@ void movement(Game *game)
 	    dd->velocity.y = velocity;
 	if(dd->s.center.y - dd->s.height <= game->floor)
 	{
+	    game->waitForDog = true;
 	    deleteDeadDuck(game, dd);
 	    if(game->n == 0)
+	    {
 		game->afterDog = true;
+		return;
+	    }
 	}
 	dd->s.center.y += dd->velocity.y;
 	dd = dd->next;
@@ -944,19 +991,35 @@ void movement(Game *game)
     {
 	if(fd->s.center.x + fd->s.width <= 0.0)
 	{
+	    game->waitForDog = true;
 	    deleteFreeDuck(game, fd);
+	    if(game->n == 0)
+	    {
+		game->afterDog = true;
+		return;
+	    }
 	}
 	if(fd->s.center.x - fd->s.width >= WINDOW_WIDTH)
 	{
+	    game->waitForDog = true;
 	    deleteFreeDuck(game, fd);
+	    if(game->n == 0)
+	    {
+		game->afterDog = true;
+		return;
+	    }
 	}
 	if(fd->velocity.y < 0.0)
 	    fd->velocity.y *= -1.0;
 	if(fd->s.center.y - fd->s.height >= WINDOW_HEIGHT)
 	{
+	    game->waitForDog = true;
 	    deleteFreeDuck(game, fd);
 	    if(game->n == 0)
+	    {
 		game->afterDog = true;
+		return;
+	    }
 	}
 	fd->s.center.x += fd->velocity.x;
 	fd->s.center.y += fd->velocity.y;
@@ -966,14 +1029,7 @@ void movement(Game *game)
 
     while(doge)
     {
-	ts = timeDiff(&doge->time, &dt);
-	/*if(ts > 10.0)
-	  {
-	  Dog *saved = doge->next;
-	  deleteDog(game, doge);
-	  doge = saved;
-	  continue;
-	  }*/
+	double ts = timeDiff(&doge->time, &dt);
 	if(2.0 < ts && ts < 2.1)
 	    doge->velocity.x = 0.0;
 	if(3.0 < ts && ts < 3.1)
@@ -993,7 +1049,8 @@ void movement(Game *game)
 	if(doge->s.center.y - doge->s.height <= game->floor)
 	{
 	    deleteDog(game, doge);
-	    game->dogGone = true;
+	    //game->dogGone = true;
+	    return;
 	}
 	doge->s.center.x += doge->velocity.x;
 	doge->s.center.y += doge->velocity.y;
@@ -1001,41 +1058,40 @@ void movement(Game *game)
 	doge = doge->next;
     }
 
-    if(game->afterDog)
+    while(hdoge)
     {
-	while(hdoge)
+	double ts = timeDiff(&hdoge->time, &dt);
+	if(0.5 < ts && ts < 0.6)
+	    hdoge->velocity.y = 0.0;
+	if(1.5 < ts && ts < 1.6)
+	    hdoge->velocity.y = -2.0;
+	if(hdoge->s.center.y - hdoge->s.height <= game->floor)
 	{
-	    double ts = timeDiff(&hdoge->time, &dt);
-	    if(1.0 < ts && ts < 1.1)
-		hdoge->velocity.y = 0.0;
-	    if(2.0 < ts && ts < 2.1)
-		hdoge->velocity.y = -1.0;
-	    if(hdoge->s.center.y - hdoge->s.height <= game->floor)
-	    {
-		deleteHappyDog(game, hdoge);
-		game->afterDog = false;
-	    }
-	    hdoge->s.center.y += hdoge->velocity.y;
-
-	    hdoge = hdoge->next;
+	    deleteHappyDog(game, hdoge);
+	    //game->afterDog = false;
+	    return;
 	}
+	hdoge->s.center.y += hdoge->velocity.y;
 
-	while(ldoge)
+	hdoge = hdoge->next;
+    }
+
+    while(ldoge)
+    {
+	double ts = timeDiff(&ldoge->time, &dt);
+	if(0.5 < ts && ts < 0.6)
+	    ldoge->velocity.y = 0.0;
+	if(1.5 < ts && ts < 1.6)
+	    ldoge->velocity.y = -2.0;
+	if(ldoge->s.center.y - ldoge->s.height <= game->floor)
 	{
-	    double ts = timeDiff(&ldoge->time, &dt);
-	    if(1.0 < ts && ts < 1.1)
-		ldoge->velocity.y = 0.0;
-	    if(2.0 < ts && ts < 2.1)
-		ldoge->velocity.y = -1.0;
-	    if(ldoge->s.center.y - ldoge->s.height <= game->floor)
-	    {
-		deleteLaughingDog(game, ldoge);
-		game->afterDog = false;
-	    }
-	    ldoge->s.center.y += ldoge->velocity.y;
-
-	    ldoge = ldoge->next;
+	    deleteLaughingDog(game, ldoge);
+	    //game->afterDog = false;
+	    return;
 	}
+	ldoge->s.center.y += ldoge->velocity.y;
+
+	ldoge = ldoge->next;
     }
 }
 
@@ -1048,6 +1104,8 @@ void render(Game *game)
     Dog *doge = game->dog;
     happyDog *hdoge = game->hdog;
     laughingDog *ldoge = game->ldog;
+    struct timespec dt;
+    clock_gettime(CLOCK_REALTIME, &dt);
 
     glColor3ub(255, 255, 255);
 
@@ -1153,14 +1211,29 @@ void render(Game *game)
     ggprint16(&r , 16, 0x00ffffff, "%i", game->rounds);
     glPopMatrix();
 
-    if((game->oneDuck || game->twoDuck) && game->dogGone)
+    if(game->afterDog && game->onScreen == 0 && game->dogGone && game->n == 0 && game->waitForDog)
     {
-	if(!d && game->duckCount >= 10 && game->duckShot >= 6)
-	{
-	    game->rounds++;
-	    game->duckCount = 0;
-	    game->duckShot = 0;
-	}
+	if(game->duckCaptured >= 1)
+	    makeHappyDog(game, WINDOW_WIDTH / 2, game->floor + 51);
+	else
+	    makeLaughingDog(game, WINDOW_WIDTH / 2, game->floor + 51);
+	game->afterDog = false;
+	game->duckCaptured = 0;
+    }
+
+    if(!d && game->duckCount >= 10 && game->duckShot >= 6 && game->dogGone && !game->waitForDog && game->onScreen == 0 && game->n == 0)
+    {
+	game->rounds++;
+	game->duckCount = 0;
+	game->duckShot = 0;
+	game->animateDog = true;
+	game->dogGone = false;
+	game->afterDog = true;
+	game->waitForDog = false;
+    }
+
+    if((game->oneDuck || game->twoDuck) && game->dogGone && !game->waitForDog)
+    {
 	if(!d && game->duckCount >= 10 && game->duckShot < 6)
 	{
 	    while(d)
@@ -1174,41 +1247,13 @@ void render(Game *game)
 	}
 	if(!d && game->oneDuck && game->duckCount < 10 && game->onScreen == 0 && game->n == 0)
 	{
-	    if(game->afterDog)
-	    {
-		if(game->duckCaptured >= 1)
-		{
-		    makeHappyDog(game, WINDOW_WIDTH / 2, game->floor + 51);
-		    //hdoge = game->hdog;
-		}   
-		else
-		{
-		    makeLaughingDog(game, WINDOW_WIDTH / 2, game->floor + 51);
-		    //ldoge = game->ldog;
-		}
-	    }
 	    game->bullets = 3;
-	    game->duckCaptured = 0;
 	    makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
 	    game->duckCount++;
 	}
 	if(!d && game->twoDuck && game->duckCount < 9 && game->onScreen == 0 && game->n == 0)
 	{
-	    if(game->afterDog)
-	    {
-		if(game->duckCaptured >= 1)
-		{
-		    makeHappyDog(game, WINDOW_WIDTH / 2, game->floor + 51);
-		    //hdoge = game->hdog;
-		}
-		else
-		{
-		    makeLaughingDog(game, WINDOW_WIDTH / 2, game->floor + 51);
-		    //ldoge = game->ldog;
-		}
-	    }
 	    game->bullets = 3;
-	    game->duckCaptured = 0;
 	    makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
 	    makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
 	    game->duckCount += 2;
@@ -1234,6 +1279,7 @@ void render(Game *game)
     glColor3ub(255, 0, 0);
     while(dd)
     {
+	double ts = timeDiff(&dd->time, &dt);
 	w = dd->s.width;
 	h = dd->s.height;
 	x = dd->s.center.x;
@@ -1244,6 +1290,15 @@ void render(Game *game)
 	glVertex2f(x+w, y-h);
 	glVertex2f(x+w, y+h);
 	glEnd();
+	r.bot = y + h;
+	r.left = x - (w/2);
+	if(ts < 0.3)
+	{
+	    if(dd->points == true)
+		ggprint16(&r , 16, 0x00ffffff, "200");
+	    else
+		ggprint16(&r , 16, 0x00ffffff, "100");
+	}
 	dd = dd->next;
     }
 
@@ -1284,39 +1339,36 @@ void render(Game *game)
 	doge = doge->next;
     }
 
-    if(game->afterDog)
+    glColor3ub(100, 100, 255);
+    while(hdoge)
     {
-	glColor3ub(50, 0, 0);
-	while(hdoge)
-	{
-	    w = hdoge->s.width;
-	    h = hdoge->s.height;
-	    x = hdoge->s.center.x;
-	    y = hdoge->s.center.y;
-	    glBegin(GL_QUADS);
-	    glVertex2f(x-w, y+h);
-	    glVertex2f(x-w, y-h);
-	    glVertex2f(x+w, y-h);
-	    glVertex2f(x+w, y+h);
-	    glEnd();
-	    hdoge = hdoge->next;
-	}
+	w = hdoge->s.width;
+	h = hdoge->s.height;
+	x = hdoge->s.center.x;
+	y = hdoge->s.center.y;
+	glBegin(GL_QUADS);
+	glVertex2f(x-w, y+h);
+	glVertex2f(x-w, y-h);
+	glVertex2f(x+w, y-h);
+	glVertex2f(x+w, y+h);
+	glEnd();
+	hdoge = hdoge->next;
+    }
 
-	glColor3ub(0, 50, 0);
-	while(ldoge)
-	{
-	    w = ldoge->s.width;
-	    h = ldoge->s.height;
-	    x = ldoge->s.center.x;
-	    y = ldoge->s.center.y;
-	    glBegin(GL_QUADS);
-	    glVertex2f(x-w, y+h);
-	    glVertex2f(x-w, y-h);
-	    glVertex2f(x+w, y-h);
-	    glVertex2f(x+w, y+h);
-	    glEnd();
-	    ldoge = ldoge->next;
-	}
+    glColor3ub(255, 100, 100);
+    while(ldoge)
+    {
+	w = ldoge->s.width;
+	h = ldoge->s.height;
+	x = ldoge->s.center.x;
+	y = ldoge->s.center.y;
+	glBegin(GL_QUADS);
+	glVertex2f(x-w, y+h);
+	glVertex2f(x-w, y-h);
+	glVertex2f(x+w, y-h);
+	glVertex2f(x+w, y+h);
+	glEnd();
+	ldoge = ldoge->next;
     }
 }
 
@@ -1442,6 +1494,7 @@ void deleteDog(Game *game, Dog *node)
     delete node;
     node = NULL;
     game->animateDog = false;
+    game->dogGone = true;
 }
 
 void deleteHappyDog(Game *game, happyDog *node)
@@ -1473,6 +1526,7 @@ void deleteHappyDog(Game *game, happyDog *node)
     delete node;
     node = NULL;
     game->afterDog = false;
+    game->waitForDog = false;
 }
 
 void deleteLaughingDog(Game *game, laughingDog *node)
@@ -1504,4 +1558,5 @@ void deleteLaughingDog(Game *game, laughingDog *node)
     delete node;
     node = NULL;
     game->afterDog = false;
+    game->waitForDog = false;
 }
