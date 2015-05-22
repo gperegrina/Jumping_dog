@@ -75,7 +75,7 @@ void init_opengl(void)
 	glGenTextures(1, &backgroundTexture);
 	glGenTextures(1, &gameoverbgTexture);
 	//-------------------------------------------------------------------
-	//duck sprite
+	//duck sprite, needed for background images
 	int w = duckImage->width;
 	int h = duckImage->height;
 	//added to test
@@ -144,7 +144,9 @@ int check_keys(XEvent *e, Game *game)
 		//You may check other keys here.
 		if(key == XK_1)
 		{
+//-----------------------------------------------------------------------------------------------------------------------------------------
 		    	gameover = false;
+//-----------------------------------------------------------------------------------------------------------------------------------------
 			while(d)
 			{
 				deleteDuck(game, d);
@@ -165,7 +167,9 @@ int check_keys(XEvent *e, Game *game)
 		}
 		if(key == XK_2)
 		{
+//-----------------------------------------------------------------------------------------------------------------------------------------
 		    	gameover = false;
+//-----------------------------------------------------------------------------------------------------------------------------------------
 			while(d)
 			{
 				deleteDuck(game, d);
@@ -185,22 +189,22 @@ int check_keys(XEvent *e, Game *game)
 			game->oneDuck = false;
 		}
 //-----------------------------------------------------------------------------------------------------------------------------------------
-		if(key == XK_3)
+ 		if(key == XK_3) //used for testing
 		{
 			background ^= 1;
 			std::cout << "background: " << background << std::endl;
 		}
-		if(key == XK_4)
+		if(key == XK_4) //used for testing
 		{
 			silhouette ^= 1;
 			std::cout << "silhouette: " << silhouette << std::endl;
 		}
-		if(key == XK_5)
+		if(key == XK_5) //used for testing
 		{
 			trees ^= 1;
 			std::cout << "trees: " << trees << std::endl;
 		}
-		if(key == XK_6)
+		if(key == XK_6) //used for testing
 		{
 			gameover ^= 1;
 			std::cout << "gameover: " << gameover << std::endl;
@@ -312,7 +316,7 @@ void render(Game *game)
 				glEnd();
 				glPopMatrix();
 //-----------------------------------------------------------------------------------------------------------------------------------------
-				if (trees && silhouette) {
+				if (trees && silhouette) { //needed to make background transparent.
 					glBindTexture(GL_TEXTURE_2D, backgroundTransTexture);
 					glBegin(GL_QUADS);
 					glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
