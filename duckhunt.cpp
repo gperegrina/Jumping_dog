@@ -1,4 +1,5 @@
 // Jason Thai
+// Gerardo Peregrina
 // Duck Hunt
 
 #include <iostream>
@@ -26,6 +27,14 @@ extern "C"
 #include "fonts.h"
 }
 
+
+#define USE_SOUND
+#ifdef USE_SOUND
+#include <FMOD/fmod.h>
+#include <FMOD/wincompat.h>
+#include "fmod.h"
+#endif //USE_SOUND
+
 //X Windows variables
 Display *dpy;
 Window win;
@@ -46,17 +55,48 @@ void timeCopy(struct timespec *dest, struct timespec *source)
     memcpy(dest, source, sizeof(struct timespec));
 }
 
-//Structures
 
+//Structures
 struct Vec {
     float x, y, z;
 };
 
 struct Shape {
-    float width, height, radius;
+    float width, height;
+    float radius;
     Vec center;
-    struct timespec time;
 };
+
+//duck sprite
+typedef double Arr[3];
+struct Sprite {
+    Arr pos;
+    Arr vel;
+};
+//First Duck Sprite
+Sprite duck_sprite;
+Ppmimage *duckImage=NULL;
+GLuint duckTexture;
+GLuint duckSil;
+//Second Duck Sprite
+Sprite duck_sprite2;
+Ppmimage *duckImage2=NULL;
+GLuint duckTexture2;
+GLuint duckSil2;
+int show_duck = 0;
+int silhouette = 1;
+//Bullet Sprite
+Sprite bullet_sprite;
+Ppmimage *bulletImage=NULL;
+GLuint bulletTexture;
+//White duck Sprite
+Sprite duckscore_sprite;
+Ppmimage *duckscoreImage=NULL;
+GLuint duckscoreTexture;
+//Red duck sprite
+Sprite duckscore_sprite2;
+Ppmimage *duckscoreImage2=NULL;
+GLuint duckscoreTexture2;
 
 struct Duck
 {
@@ -65,13 +105,13 @@ struct Duck
     struct timespec time;
     struct Duck *prev;
     struct Duck *next;
+    //bool shot;
     Duck()
     {
 	prev = NULL;
 	next = NULL;
     }
 };
-
 struct deadDuck
 {
     Shape s;
@@ -86,11 +126,11 @@ struct deadDuck
 	next = NULL;
     }
 };
-
 struct freeDuck
 {
     Shape s;
     Vec velocity;
+    //struct timespec time;
     struct freeDuck *prev;
     struct freeDuck *next;
     freeDuck()
@@ -100,7 +140,6 @@ struct freeDuck
     }
 };
 
-////////////////////////////////////////////////
 struct Dog
 {
     Shape s;
@@ -114,7 +153,6 @@ struct Dog
 	next = NULL;
     }
 };
-
 struct happyDog
 {
     Shape s;
@@ -128,7 +166,6 @@ struct happyDog
 	next = NULL;
     }
 };
-
 struct laughingDog
 {
     Shape s;
@@ -142,37 +179,37 @@ struct laughingDog
 	next = NULL;
     }
 };
-//////////////////////////////////////////////////
 
 struct Game {
-    int bullets, n, rounds, score, duckCount, duckShot, onScreen, duckCaptured;  // <-- duckCaptured
+    int bullets, n, rounds, score, duckCount, duckShot, onScreen, duckCaptured;
     Duck *duck;
     deadDuck *deadD;
     freeDuck *freeD;
-    Dog *dog;    //////////////////////
-    happyDog *hdog;  ////////////////////
-    laughingDog *ldog;   //////////////////
+    Dog *dog;
+    happyDog *hdog;
+    laughingDog *ldog;
     float floor;
-    struct timespec duckTimer, dogTimer; // <-- dogTimer
-    Shape box[6];
-    bool oneDuck, twoDuck, animateDog, dogGone, afterDog, waitForDog; // <-- animateDog,dogGone,afterDog,waitForDog
+    struct timespec duckTimer, dogTimer;
+    Shape box[10];
+    bool oneDuck, twoDuck, animateDog, dogGone, afterDog, waitForDog;
+    bool menutest;
     ~Game()
     {
 	delete duck;
 	delete deadD;
 	delete freeD;
-	delete dog;  ///////////////
-	delete hdog;  ///////////////
-	delete ldog;  /////////////////
+	delete dog;
+	delete hdog;
+	delete ldog;
     }
     Game()
     {
 	duck = NULL;
 	deadD = NULL;
 	freeD = NULL;
-	dog = NULL;  //////////////////
-	hdog = NULL;  /////////////////
-	ldog = NULL;  //////////////////
+	dog = NULL;
+	hdog = NULL;
+	ldog = NULL;
 	bullets = 0;
 	n = 0;
 	floor = WINDOW_HEIGHT / 5.0;
@@ -181,13 +218,15 @@ struct Game {
 	duckCount = 0;
 	duckShot = 0;
 	onScreen = 0;
-	duckCaptured = 0;  ///////////////////
+	duckCaptured = 0;
 	oneDuck = false;
 	twoDuck = false;
-	animateDog = false;   //////////////////////
-	dogGone = true;  /////////////////////
-	afterDog = false;  ////////////////////////
-	waitForDog = true;  ///////////////////////
+	animateDog = false;
+	dogGone = true;
+	afterDog = false;
+	waitForDog = true;
+
+	menutest = true;
 
 	//bullet
 	box[0].width = 45;
@@ -223,8 +262,30 @@ struct Game {
 	box[4].center.x = 0;
 	box[4].center.y = 0;
 	box[4].center.z = 0;
+
+	box[5].width = 100;
+	box[5].height = 80;
+	box[5].center.x = 110;
+	box[5].center.y = 500;
+	box[5].center.z = 0;
+
+	box[6].width = 100;
+	box[6].height = 80;
+	box[6].center.x = 400;
+	box[6].center.y = 500;
+	box[6].center.z = 0;
+
+	box[7].width = 100;
+	box[7].height = 80;
+	box[7].center.x = 690;
+	box[7].center.y = 500;
+	box[7].center.z = 0;
+
+
+
     }
 };
+
 
 //Function prototypes
 void initXWindows(void);
@@ -235,22 +296,32 @@ int check_keys(XEvent *e, Game *game);
 void movement(Game *game);
 void render(Game *game);
 void makeDuck(Game *game);
+//Added from Jason's File
 void makeDeadDuck(Game *game);
 void makeFreeDuck(Game *game);
-void makeDog(Game *game);   //////////////////////////////
-void makeHappyDog(Game *game);  //////////////////////////////
-void makeLaughingDog(Game *game);  ///////////////////////////////
+void makeDog(Game *game);
+void makeHappyDog(Game *game);
+void makeLaughingDog(Game *game);
 void deleteDuck(Game *game, Duck *duck);
 void deleteDeadDuck(Game *game, deadDuck *deadD);
 void deleteFreeDuck(Game *game, freeDuck *freeD);
-void deleteDog(Game *game, Dog *dog);  /////////////////////////////////
-void deleteHappyDog(Game *game, happyDog *dog);  ////////////////////////////
-void deleteLaughingDog(Game *game, laughingDog *dog);  ///////////////////////////
+void deleteDog(Game *game, Dog *dog);
+void deleteHappyDog(Game *game, happyDog *dog);
+void deleteLaughingDog(Game *game, laughingDog *dog);
+
 void check_resize(XEvent *e);
+void init_sounds(void);
 
 Ppmimage *backgroundImage = NULL;
 GLuint backgroundTexture;
 int background = 1;
+//Transparent background
+Ppmimage *backgroundTransImage = NULL;
+Ppmimage *gameoverbgImage = NULL;
+GLuint backgroundTransTexture;
+GLuint gameoverbgTexture;
+int trees = 1;
+bool gameover = false;
 
 int main(void)
 {
@@ -258,6 +329,7 @@ int main(void)
     srand(time(NULL));
     initXWindows();
     init_opengl();
+    init_sounds();
 
     clock_gettime(CLOCK_REALTIME, &timePause);
     clock_gettime(CLOCK_REALTIME, &timeStart);
@@ -287,6 +359,9 @@ int main(void)
     }
     cleanupXWindows();
     cleanup_fonts();
+#ifdef USE_SOUND
+    fmod_cleanup();
+#endif //USE_SOUND
     return 0;
 }
 
@@ -359,23 +434,7 @@ unsigned char *buildAlphaData(Ppmimage *img) {
 	*(ptr+0) = a;
 	*(ptr+1) = b;
 	*(ptr+2) = c;
-	//
-	//get the alpha value
-	//
-	//original code
-	//get largest color component...
-	//*(ptr+3) = (unsigned char)((
-	//      (int)*(ptr+0) +
-	//      (int)*(ptr+1) +
-	//      (int)*(ptr+2)) / 3);
-	//d = a;
-	//if (b >= a && b >= c) d = b;
-	//if (c >= a && c >= b) d = c;
-	//*(ptr+3) = d;
-	//
-	//new code, suggested by Chris Smith, Fall 2013
 	*(ptr+3) = (a|b|c);
-	//
 	ptr += 4;
 	data += 3;
     }
@@ -400,17 +459,136 @@ void init_opengl(void)
     //clear the screen
     glClearColor(1.0, 1.0, 1.0, 1.0);
     backgroundImage = ppm6GetImage("./images/background.ppm");
-    //
-    //create opengl texture elements
-    glGenTextures(1, &backgroundTexture);
-    //background
-    glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+    backgroundTransImage = ppm6GetImage("./images/backgroundTrans.ppm");
+    gameoverbgImage = ppm6GetImage("./images/gameoverbg.ppm");
+
+
+
+    //-------------------------------------------------------------------
+    //bullet
+    glGenTextures(1, &bulletTexture);
+    bulletImage = ppm6GetImage("./images/bullet.ppm");
+    int w3 = bulletImage->width;
+    int h3 = bulletImage->height;
+    glBindTexture(GL_TEXTURE_2D, bulletTexture);
     //
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w3, h3, 0, GL_RGB, GL_UNSIGNED_BYTE, bulletImage->data);
+    //-------------------------------------------------------------------
+
+    //-------------------------------------------------------------------
+    //White duck score sprite	
+    glGenTextures(1, &duckscoreTexture);
+    duckscoreImage = ppm6GetImage("./images/duck_score_1.ppm");
+    int w4 = duckscoreImage->width;
+    int h4 = duckscoreImage->height;
+    glBindTexture(GL_TEXTURE_2D, duckscoreTexture);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w4, h4, 0, GL_RGB, GL_UNSIGNED_BYTE, duckscoreImage->data);
+    //-------------------------------------------------------------------
+
+    //-------------------------------------------------------------------
+    //Red duck score sprite	
+    glGenTextures(1, &duckscoreTexture2);
+    duckscoreImage2 = ppm6GetImage("./images/duck_score_2.ppm");
+    int w5 = duckscoreImage2->width;
+    int h5 = duckscoreImage2->height;
+    glBindTexture(GL_TEXTURE_2D, duckscoreTexture2);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w5, h5, 0, GL_RGB, GL_UNSIGNED_BYTE, duckscoreImage2->data);
+    //-------------------------------------------------------------------
+
+    //-------------------------------------------------------------------
+    //duck sprite
+    glGenTextures(1, &duckTexture);
+    glGenTextures(1, &duckSil);
+    duckImage = ppm6GetImage("./images/duck.ppm");
+    int w = duckImage->width;
+    int h = duckImage->height;
+    glBindTexture(GL_TEXTURE_2D, duckTexture);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, duckImage->data);
+    //-------------------------------------------------------------------
+
+    //-------------------------------------------------------------------
+    //duck sprite 2
+    glGenTextures(1, &duckTexture2);
+    glGenTextures(1, &duckSil2);
+    duckImage2 = ppm6GetImage("./images/duck2.ppm");
+    int w2 = duckImage2->width;
+    int h2 = duckImage2->height;
+    glBindTexture(GL_TEXTURE_2D, duckTexture2);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w2, h2, 0, GL_RGB, GL_UNSIGNED_BYTE, duckImage2->data);
+    //-------------------------------------------------------------------
+
+    //-------------------------------------------------------------------
+    //duck silhouette 
+    glBindTexture(GL_TEXTURE_2D, duckSil);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    ////must build a new set of data...
+    unsigned char *silhouetteData = buildAlphaData(duckImage);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+	    GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
+    delete [] silhouetteData;
+    //-------------------------------------------------------------------
+
+    //-------------------------------------------------------------------
+    //duck silhouette 2 
+    glBindTexture(GL_TEXTURE_2D, duckSil2);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    ////must build a new set of data...
+    unsigned char *silhouetteData2 = buildAlphaData(duckImage2);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w2, h2, 0,
+	    GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData2);
+    delete [] silhouetteData2;
+    //-------------------------------------------------------------------
+
+    //-------------------------------------------------------------------
+    //background textures
+    //create opengl texture elements
+    glGenTextures(1, &backgroundTexture);
+    glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, backgroundImage->width, backgroundImage->height, 0, GL_RGB, GL_UNSIGNED_BYTE, backgroundImage->data); 
-    //Set the screen background color
-    //glClearColor(0.1, 0.1, 0.1, 1.0);
+    //-------------------------------------------------------------------
+
+    //-------------------------------------------------------------------
+    //No genTextures for trans image?
+    //forest transparent part
+    glBindTexture(GL_TEXTURE_2D, backgroundTransTexture);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    //must build a new set of data...
+    int w6 = backgroundTransImage->width;
+    int h6 = backgroundTransImage->height;
+    unsigned char *ftData = buildAlphaData(backgroundTransImage);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w6, h6, 0, GL_RGBA, GL_UNSIGNED_BYTE, ftData);
+    delete [] ftData;
+    //-------------------------------------------------------------------
+
+    //-------------------------------------------------------------------
+    //gameover
+    glGenTextures(1, &gameoverbgTexture);
+    glBindTexture(GL_TEXTURE_2D, gameoverbgTexture);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, gameoverbgImage->width, gameoverbgImage->height, 0, GL_RGB, GL_UNSIGNED_BYTE, gameoverbgImage->data);
+    //-------------------------------------------------------------------
+
     glEnable(GL_TEXTURE_2D);
     initialize_fonts();
 }
@@ -453,6 +631,8 @@ void makeDuck(Game *game, float x, float y)
     game->n++;
 }
 
+
+//----------------------------------------------------------------------
 void makeDeadDuck(Game *game, Duck *duck)
 {
     if(game->onScreen >= MAX_DUCKS)
@@ -486,6 +666,7 @@ void makeDeadDuck(Game *game, Duck *duck)
     game->deadD = dd;
     game->onScreen++;
 }
+
 
 void makeFreeDuck(Game *game, Duck *duck)
 {
@@ -521,11 +702,10 @@ void makeFreeDuck(Game *game, Duck *duck)
     game->onScreen++;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////
 void makeDog(Game *game, float x, float y)
 {
     //if(!game->dogGone)
-    //	return;
+    //  return;
     struct timespec dt;
     clock_gettime(CLOCK_REALTIME, &dt);
     timeCopy(&game->dogTimer, &dt);
@@ -560,7 +740,7 @@ void makeDog(Game *game, float x, float y)
 void makeHappyDog(Game *game, float x, float y)
 {
     //if(!game->afterDog)
-    //	return;
+    //  return;
     struct timespec dt;
     clock_gettime(CLOCK_REALTIME, &dt);
     timeCopy(&game->dogTimer, &dt);
@@ -596,7 +776,7 @@ void makeHappyDog(Game *game, float x, float y)
 void makeLaughingDog(Game *game, float x, float y)
 {
     //if(!game->afterDog)
-    //	return;
+    //  return;
     struct timespec dt;
     clock_gettime(CLOCK_REALTIME, &dt);
     timeCopy(&game->dogTimer, &dt);
@@ -628,7 +808,7 @@ void makeLaughingDog(Game *game, float x, float y)
     game->afterDog = true;
     game->waitForDog = true;
 }
-///////////////////////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
 
 void check_resize(XEvent *e)
 {
@@ -641,6 +821,8 @@ void check_resize(XEvent *e)
     }
 }
 
+
+//----------------------------------------------------------------------
 void check_mouse(XEvent *e, Game *game)
 {
     int y = WINDOW_HEIGHT - e->xbutton.y;
@@ -656,6 +838,8 @@ void check_mouse(XEvent *e, Game *game)
     }
     if (e->type == ButtonPress) {
 	if (e->xbutton.button==1) {
+#ifdef USE_SOUND
+	    fmod_playsound(0);
 	    //Left button was pressed
 	    while(d)
 	    {
@@ -664,22 +848,23 @@ void check_mouse(XEvent *e, Game *game)
 			y <= d->s.center.y + d->s.height &&
 			y >= d->s.center.y - d->s.height)
 		{
+		    fmod_playsound(1);
 		    makeDeadDuck(game, d);
 		    ts = timeDiff(&d->time, &dt);
 		    if(ts < 1.5)
 		    {
-			game->deadD->points = true;  /////////////////////////////////
+			game->deadD->points = true;
 			game->score += 200;
 		    }
 		    else
 		    {
-			game->deadD->points = false;  ///////////////////////////////////
+			game->deadD->points = false;
 			game->score += 100;
 		    }
 		    saved = d->next;
 		    deleteDuck(game, d);
 		    d = saved;
-		    game->bullets--;	
+		    game->bullets--;
 		    game->duckShot++;
 		    game->duckCaptured++;
 		    if(game->bullets < 1)
@@ -707,12 +892,12 @@ void check_mouse(XEvent *e, Game *game)
 			ts = timeDiff(&d->time, &dt);
 			if(ts < 1.5)
 			{
-			    game->deadD->points = true;  /////////////////////////////////////
+			    game->deadD->points = true;
 			    game->score += 200;
 			}
 			else
 			{
-			    game->deadD->points = false;  /////////////////////////////////////
+			    game->deadD->points = false;
 			    game->score += 100;
 			}
 			saved = d->prev;
@@ -755,10 +940,11 @@ void check_mouse(XEvent *e, Game *game)
 		    }
 		    return;
 		}
-		game->bullets--;	
+		game->bullets--;
 		d = d->next;
 	    }
 	}
+#endif
     }
     if (e->xbutton.button==3) {
 	//Right button was pressed
@@ -766,7 +952,7 @@ void check_mouse(XEvent *e, Game *game)
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////  check everything below here
+
 int check_keys(XEvent *e, Game *game)
 {
     Duck *d = game->duck;
@@ -785,6 +971,7 @@ int check_keys(XEvent *e, Game *game)
 	//You may check other keys here.
 	if(key == XK_1)
 	{
+	    game->menutest = false;
 	    while(d)
 	    {
 		deleteDuck(game, d);
@@ -832,11 +1019,12 @@ int check_keys(XEvent *e, Game *game)
 	}
 	if(key == XK_2)
 	{
+	    game->menutest = false;
 	    while(d)
 	    {
 		deleteDuck(game, d);
 		d = d->next;
-	    }	
+	    }
 	    while(dd)
 	    {
 		deleteDeadDuck(game, dd);
@@ -880,6 +1068,8 @@ int check_keys(XEvent *e, Game *game)
     }
     return 0;
 }
+//------------------------------------------------------------------
+
 
 void movement(Game *game)
 {
@@ -962,9 +1152,8 @@ void movement(Game *game)
 	d->s.center.x += d->velocity.x;
 	d->s.center.y += d->velocity.y;
 
-	d = d->next;	
+	d = d->next;
     }
-
     while(dd)
     {
 	double ts = timeDiff(&dd->time, &dt);
@@ -1026,7 +1215,6 @@ void movement(Game *game)
 
 	fd = fd->next;
     }
-
     while(doge)
     {
 	double ts = timeDiff(&doge->time, &dt);
@@ -1095,6 +1283,8 @@ void movement(Game *game)
     }
 }
 
+//=====================================================================================
+//The Display of the game 
 void render(Game *game)
 {
     float w, h, x, y;
@@ -1112,8 +1302,18 @@ void render(Game *game)
     glClearColor(1.0, 1.0, 1.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    //Background and Gameover being displayed
     if(background) {
 	glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+	glTexCoord2f(0.0f, 0.0f); glVertex2i(0, WINDOW_HEIGHT);
+	glTexCoord2f(1.0f, 0.0f); glVertex2i(WINDOW_WIDTH, WINDOW_HEIGHT);
+	glTexCoord2f(1.0f, 1.0f); glVertex2i(WINDOW_WIDTH, 0);
+	glEnd();
+    }
+    if(gameover) {
+	glBindTexture(GL_TEXTURE_2D, gameoverbgTexture);
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
 	glTexCoord2f(0.0f, 0.0f); glVertex2i(0, WINDOW_HEIGHT);
@@ -1125,6 +1325,7 @@ void render(Game *game)
     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
+    //----------------------------------------
 
     //Drawing Shapes
     glColor3ub(255, 255, 255);
@@ -1133,22 +1334,103 @@ void render(Game *game)
     glVertex2f(WINDOW_WIDTH, game->floor);
     glEnd();
 
-    //GERARDO
-    //Printing text in Boxes
     Rect r;
-    //  glClear(GL_COLOR_BUFFER_BIT);
     r.bot = WINDOW_HEIGHT - 550;
     r.left = WINDOW_WIDTH - 715;
     r.center = 0;
 
+    //-------------------------------------------------------------------
     //Drawing Boxes
     Shape *s;
+
+    if (game->menutest == true) {
+	const char* text[3] = {"One Duck Hunt", "Two Duct Hunt", "        Exit"}; // the Text need fixing to look better.
+	for(int i=5; i<8; i++) {
+	    glColor3ub(90, 140, 90);
+	    s = &game->box[i];
+	    glPushMatrix();
+	    glTranslatef(s->center.x, s->center.y, s->center.z);
+	    w = s->width;
+	    h = s->height;
+	    r.bot = s->height - 75;
+	    r.left = s->width - 170;
+	    glBegin(GL_QUADS);
+	    glVertex2i(-w,-h);
+	    glVertex2i(-w, h);
+	    glVertex2i( w, h);
+	    glVertex2i( w,-h);
+	    glEnd();
+	    if (i == 5)
+		ggprint16(&r, 35, 0x00ffffff, text[0]);
+	    if (i == 6)
+		ggprint16(&r, 35, 0x00ffffff, text[1]);
+	    if (i == 7)
+		ggprint16(&r, 35, 0x00ffffff, text[2]);
+	    r.bot = s->height - 120;
+	    r.left = s->width - 170;
+	    if (i == 5)
+		ggprint16(&r, 35, 0x00ffffff, "   Key \" 1 \"");
+	    if (i == 6)
+		ggprint16(&r, 35, 0x00ffffff, "   Key \" 2 \"");
+	    if (i == 7)
+		ggprint16(&r, 35, 0x00ffffff, "   Key \" Esc \"");
+	    glPopMatrix();
+	}
+    }
+
+
+
+
+
+    //Displaying bullets
     glColor3ub(90, 140, 90);
     s = &game->box[0];
     glPushMatrix();
     glTranslatef(s->center.x, s->center.y, s->center.z);
     w = s->width;
     h = s->height;
+    int num = 0, dist = 0;
+    if (game->bullets == 3) {
+	num = 3, dist = 80;
+    }
+    if (game->bullets == 2) {
+	num = 2, dist = 60;
+    }
+    if (game->bullets == 1) {
+	num = 1, dist = 40;
+    }
+    if (game->bullets == 0) {
+	num = 0, dist = 0;
+    }
+    if (game->bullets != 0) {
+	for (int i=0;i<num;i++) {
+	    bullet_sprite.pos[0] = dist - (i * 20);
+	    bullet_sprite.pos[1] = 40;
+	    bullet_sprite.pos[2] = 0;
+	    float wid = 10.0f;
+	    glPushMatrix();
+	    glTranslatef(bullet_sprite.pos[0], bullet_sprite.pos[1], bullet_sprite.pos[2]);
+	    glBindTexture(GL_TEXTURE_2D, bulletTexture);
+	    glEnable(GL_ALPHA_TEST);
+	    glAlphaFunc(GL_GREATER, 0.0f);
+	    glColor4ub(255,255,255,255);
+	    glBegin(GL_QUADS);
+	    if (bullet_sprite.vel[0] > 0.0) {
+		glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+		glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+		glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+		glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+	    } else {
+		glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+		glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+		glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+		glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+	    }
+	    glEnd();
+	    glPopMatrix();
+	    glDisable(GL_ALPHA_TEST);
+	}
+    }
     r.bot = s->height;
     r.left = s->width;
     glVertex2i(-w, -h);
@@ -1156,15 +1438,86 @@ void render(Game *game)
     glVertex2i(w, h);
     glVertex2i(w, -h);
     glEnd();
-    ggprint16(&r , 16, 0x00ffffff, "%i", game->bullets);
+    //ggprint16(&r , 16, 0x00ffffff, "%i", game->bullets);
     glPopMatrix();
 
+    //-------------------------------------------------------------------
+    //Displaying duck score sprites
     glColor3ub(90, 140, 90);
     s = &game->box[1];
     glPushMatrix();
     glTranslatef(s->center.x, s->center.y, s->center.z);
     w = s->width;
     h = s->height;
+    if (game->duckShot <= 10) {
+	for (int i=0;i<=9;i++) {
+	    duckscore_sprite.pos[0] = 70 + (i * 25);
+	    duckscore_sprite.pos[1] = 42;
+	    duckscore_sprite.pos[2] = 0;
+	    float wid = 10.0f;
+	    glPushMatrix();
+	    glTranslatef(duckscore_sprite.pos[0], duckscore_sprite.pos[1], duckscore_sprite.pos[2]);
+	    glBindTexture(GL_TEXTURE_2D, duckscoreTexture);
+	    glEnable(GL_ALPHA_TEST);
+	    glAlphaFunc(GL_GREATER, 0.0f);
+	    glColor4ub(255,255,255,255);
+	    glBegin(GL_QUADS);
+	    if (duckscore_sprite.vel[0] > 0.0) {
+		glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+		glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+		glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+		glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+	    } else {
+		glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+		glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+		glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+		glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+	    }
+	    glEnd();
+	    glPopMatrix();
+	    glDisable(GL_ALPHA_TEST);
+	}
+    }
+    int loop = 0;
+    if (game->duckShot == 1) loop = 1;
+    if (game->duckShot == 2) loop = 2;
+    if (game->duckShot == 3) loop = 3;
+    if (game->duckShot == 4) loop = 4;
+    if (game->duckShot == 5) loop = 5;
+    if (game->duckShot == 6) loop = 6;
+    if (game->duckShot == 7) loop = 7;
+    if (game->duckShot == 8) loop = 8;
+    if (game->duckShot == 9) loop = 9;
+    if (game->duckShot == 10) loop = 10;
+    if (game->duckShot <= 9) {
+	for (int i=0;i<loop;i++) {
+	    duckscore_sprite2.pos[0] = 70 + (i * 25);
+	    duckscore_sprite2.pos[1] = 42;
+	    duckscore_sprite2.pos[2] = 0;
+	    float wid = 10.0f;
+	    glPushMatrix();
+	    glTranslatef(duckscore_sprite2.pos[0], duckscore_sprite2.pos[1], duckscore_sprite2.pos[2]);
+	    glBindTexture(GL_TEXTURE_2D, duckscoreTexture2);
+	    glEnable(GL_ALPHA_TEST);
+	    glAlphaFunc(GL_GREATER, 0.0f);
+	    glColor4ub(255,255,255,255);
+	    glBegin(GL_QUADS);
+	    if (duckscore_sprite2.vel[0] > 0.0) {
+		glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+		glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+		glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+		glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+	    } else {
+		glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+		glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+		glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+		glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+	    }
+	    glEnd();
+	    glPopMatrix();
+	    glDisable(GL_ALPHA_TEST);
+	}
+    }
     r.bot = s->height;
     r.left = s->width;
     glVertex2i(-w, -h);
@@ -1176,8 +1529,10 @@ void render(Game *game)
     {
 	ggprint16(&r , 16, 0x00ffffff, "GAME OVER");
     }
-    ggprint16(&r , 16, 0x00ffffff, "%i / 10", game->duckShot);
+    //ggprint16(&r , 16, 0x00ffffff, "%i / 10", game->duckShot);
     glPopMatrix();
+
+
 
     glColor3ub(90, 140, 90);
     s = &game->box[2];
@@ -1210,6 +1565,7 @@ void render(Game *game)
     glEnd();
     ggprint16(&r , 16, 0x00ffffff, "%i", game->rounds);
     glPopMatrix();
+
 
     if(game->afterDog && game->onScreen == 0 && game->dogGone && game->n == 0 && game->waitForDog)
     {
@@ -1260,6 +1616,9 @@ void render(Game *game)
 	}
     }
 
+
+    //Main Duck rendering
+    duck_sprite.pos[0] = s->center.x;
     glColor3ub(255, 255, 255);
     while(d)
     {
@@ -1273,9 +1632,85 @@ void render(Game *game)
 	glVertex2f(x+w, y-h);
 	glVertex2f(x+w, y+h);
 	glEnd();
+	//This changes which duck it points to
+
+	show_duck= 1;
+	float wid = 50.0f;
+	duck_sprite.pos[0] = x;
+	duck_sprite.pos[1] = y;
+	duck_sprite.pos[2] = s->center.z;
+
 	d = d->next;
+	duck_sprite2.pos[0] = x;
+	duck_sprite2.pos[1] = y;
+	duck_sprite2.pos[2] = s->center.z;
+
+
+	if(show_duck) {
+	    glPushMatrix();
+	    glTranslatef(duck_sprite.pos[0], duck_sprite.pos[1], duck_sprite.pos[2]);
+	    //remove if statement and make
+	    //a while loop to take in both duck 
+	    if (silhouette) 
+	    {
+		//glBind makes the duck texture
+		glBindTexture(GL_TEXTURE_2D, duckTexture);
+		glEnable(GL_ALPHA_TEST);
+		glAlphaFunc(GL_GREATER, 0.0f);
+		glColor4ub(255,255,255,255);
+	    }
+
+	    glBegin(GL_QUADS);
+	    if (duck_sprite.vel[0] > 0.0) {
+		glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+		glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+		glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+		glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+	    } else {
+		glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+		glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+		glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+		glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+	    }
+	    //Duck2
+	    /*				glTranslatef(duck_sprite2.pos[0], duck_sprite2.pos[1], duck_sprite2.pos[2]);
+					if (silhouette) 
+					{
+					glBindTexture(GL_TEXTURE_2D, duckTexture2);
+					glEnable(GL_ALPHA_TEST);
+					glAlphaFunc(GL_GREATER, 0.0f);
+					glColor4ub(255,255,255,255);
+					}
+					glBegin(GL_QUADS);
+					if (duck_sprite2.vel[0] > 0.0) {
+					glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+					glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+					glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+					glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+					} else {
+					glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+					glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+					glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+					glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+					}
+					*/
+	    glEnd();
+	    glPopMatrix();
+	    //Transparent part
+	    if (trees && silhouette) {
+		glBindTexture(GL_TEXTURE_2D, backgroundTransTexture);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+		glTexCoord2f(0.0f, 0.0f); glVertex2i(0, WINDOW_HEIGHT);
+		glTexCoord2f(1.0f, 0.0f); glVertex2i(WINDOW_WIDTH, WINDOW_HEIGHT);
+		glTexCoord2f(1.0f, 1.0f); glVertex2i(WINDOW_WIDTH, 0);
+		glEnd();
+	    }
+	    glDisable(GL_ALPHA_TEST);
+	}
     }
 
+    //----------------------------------------------------
     glColor3ub(255, 0, 0);
     while(dd)
     {
@@ -1372,6 +1807,10 @@ void render(Game *game)
     }
 }
 
+
+
+
+//----------------------------------------------------------------------------------
 void deleteDuck(Game *game, Duck *node)
 {
     if(node->prev == NULL)
@@ -1402,7 +1841,6 @@ void deleteDuck(Game *game, Duck *node)
     node = NULL;
     game->n--;
 }
-
 void deleteDeadDuck(Game *game, deadDuck *node)
 {
     if(node->prev == NULL)
@@ -1433,7 +1871,6 @@ void deleteDeadDuck(Game *game, deadDuck *node)
     node = NULL;
     game->onScreen--;
 }
-
 void deleteFreeDuck(Game *game, freeDuck *node)
 {
     if(node->prev == NULL)
@@ -1465,6 +1902,8 @@ void deleteFreeDuck(Game *game, freeDuck *node)
     game->onScreen--;
 }
 
+
+//----------------------------------------------------------------------------------
 void deleteDog(Game *game, Dog *node)
 {
     if(node->prev == NULL)
@@ -1496,7 +1935,6 @@ void deleteDog(Game *game, Dog *node)
     game->animateDog = false;
     game->dogGone = true;
 }
-
 void deleteHappyDog(Game *game, happyDog *node)
 {
     if(node->prev == NULL)
@@ -1528,7 +1966,6 @@ void deleteHappyDog(Game *game, happyDog *node)
     game->afterDog = false;
     game->waitForDog = false;
 }
-
 void deleteLaughingDog(Game *game, laughingDog *node)
 {
     if(node->prev == NULL)
@@ -1560,3 +1997,28 @@ void deleteLaughingDog(Game *game, laughingDog *node)
     game->afterDog = false;
     game->waitForDog = false;
 }
+
+
+//---------------------------------------------------
+void init_sounds(void)
+{
+#ifdef USE_SOUND
+    //FMOD_RESULT result;
+    if (fmod_init()) {
+	std::cout << "ERROR - fmod_init()\n" << std::endl;
+	return;
+    }
+    if (fmod_createsound((char *)"./sounds/gunshot.wav", 0)) {
+	std::cout << "ERROR - fmod_createsound()\n" << std::endl;
+	return;
+    }
+    if (fmod_createsound((char *)"./sounds/drip.mp3", 1)) {
+	std::cout << "ERROR - fmod_createsound()\n" << std::endl;
+	return;
+    }
+    fmod_setmode(0,FMOD_LOOP_OFF);
+    //fmod_playsound(0);
+    //fmod_systemupdate();
+#endif //USE_SOUND
+}
+
