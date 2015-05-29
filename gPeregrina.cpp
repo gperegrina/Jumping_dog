@@ -378,10 +378,10 @@ void init_opengl(void)
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
     //must build a new set of data...
-    int w10 = backgroundTransImage->width;
-    int h10 = backgroundTransImage->height;
+    int w15 = backgroundTransImage->width;
+    int h15 = backgroundTransImage->height;
     unsigned char *ftData = buildAlphaData(backgroundTransImage);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w10, h10, 0, GL_RGBA, GL_UNSIGNED_BYTE, ftData);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w15, h15, 0, GL_RGBA, GL_UNSIGNED_BYTE, ftData);
     delete [] ftData;
     //-------------------------------------------------------------------
 
