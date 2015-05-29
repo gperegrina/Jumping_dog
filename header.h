@@ -265,22 +265,22 @@ struct Game {
         box[4].center.y = 0;
         box[4].center.z = 0;
 
-        box[5].width = 100;
-        box[5].height = 80;
-        box[5].center.x = 110;
+        box[5].width = 140;
+        box[5].height = 40;
+        box[5].center.x = 400;
         box[5].center.y = 500;
         box[5].center.z = 0;
 
-        box[6].width = 100;
-        box[6].height = 80;
+        box[6].width = 140;
+        box[6].height = 40;
         box[6].center.x = 400;
-        box[6].center.y = 500;
+        box[6].center.y = 400;
         box[6].center.z = 0;
 
-        box[7].width = 100;
-        box[7].height = 80;
-        box[7].center.x = 690;
-        box[7].center.y = 500;
+        box[7].width = 140;
+        box[7].height = 40;
+        box[7].center.x = 400;
+        box[7].center.y = 300;
         box[7].center.z = 0;
 
 
