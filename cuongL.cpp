@@ -139,7 +139,7 @@ void menu(Game *game)
     Shape *s;
 
     if (game->menutest == true) {
-        const char* text[3] = {"One Duck Hunt - Press 1", "Two Duct Hunt - Press 2", "        Exit - Press ESC"}; 
+        const char* text[3] = {"One Duck Hunt - Press 1", "Two Duct Hunt - Press 2", "      Exit - Press ESC"}; 
         for(int i=5; i<8; i++) {
             glColor3ub(90, 140, 90);
             s = &game->box[i];
