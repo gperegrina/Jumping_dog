@@ -106,7 +106,7 @@ extern GLuint dogSil2;
 extern Sprite dog_sprite3;
 extern Ppmimage *dogImage3;
 extern GLuint dogTexture3;
-Gextern Luint dogSil3;
+extern GLuint dogSil3;
 //Bullet Sprite
 extern Sprite bullet_sprite;
 extern Ppmimage *bulletImage;
