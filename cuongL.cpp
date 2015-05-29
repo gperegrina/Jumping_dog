@@ -7,24 +7,7 @@
 
 #include "header.h"
 
-       for(int i=5; i<8; i++)
-        {
-        box[i].width = 140;
-        box[i].height = 40;
-        }
-        
-        box[5].center.x = 400;
-        box[5].center.y = 500;
-        box[5].center.z = 0;
-
-        box[6].center.x = 400;
-        box[6].center.y = 400;
-        box[6].center.z = 0;
-
-        box[7].center.x = 400;
-        box[7].center.y = 300;
-        box[7].center.z = 0;
-
+     
 
 int check_keys(XEvent *e, Game *game) 
 {
