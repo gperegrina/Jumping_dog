@@ -35,7 +35,7 @@ Sprite duck_sprite2;
 Ppmimage *duckImage2=NULL;
 GLuint duckTexture2;
 GLuint duckSil2;
-/Third Duck Sprite
+//Third Duck Sprite
 Sprite duck_sprite3;
 Ppmimage *duckImage3=NULL;
 GLuint duckTexture3;
