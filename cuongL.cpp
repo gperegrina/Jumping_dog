@@ -3,11 +3,30 @@
 
 //I worked on some part of the background, the background transparent, and sprites with group .
 //Im working on now for the menu with clickable buttons to Play and Exit  the game. 
-//Next I will working for the background change along with the game's rounds.
+//Next I will working for the spashscreen before the game begin.
 
 #include "header.h"
 
-int check_keys(XEvent *e, Game *game) ////////////////leave for cuong?
+       for(int i=5; i<8; i++)
+        {
+        box[i].width = 140;
+        box[i].height = 40;
+        }
+        
+        box[5].center.x = 400;
+        box[5].center.y = 500;
+        box[5].center.z = 0;
+
+        box[6].center.x = 400;
+        box[6].center.y = 400;
+        box[6].center.z = 0;
+
+        box[7].center.x = 400;
+        box[7].center.y = 300;
+        box[7].center.z = 0;
+
+
+int check_keys(XEvent *e, Game *game) 
 {
     Duck *d = game->duck;
     deadDuck *dd = game->deadD;
@@ -137,7 +156,7 @@ void menu(Game *game)
     Shape *s;
 
     if (game->menutest == true) {
-        const char* text[3] = {"One Duck Hunt", "Two Duct Hunt", "        Exit"}; // the Text need fixing to look better.
+        const char* text[3] = {"One Duck Hunt - Press 1", "Two Duct Hunt - Press 2", "        Exit - Press ESC"}; 
         for(int i=5; i<8; i++) {
             glColor3ub(90, 140, 90);
             s = &game->box[i];
@@ -145,8 +164,8 @@ void menu(Game *game)
             glTranslatef(s->center.x, s->center.y, s->center.z);
             w = s->width;
             h = s->height;
-            r.bot = s->height - 75;
-            r.left = s->width - 170;
+            r.bot = s->height - 50;
+            r.left = s->width - 230;
             glBegin(GL_QUADS);
             glVertex2i(-w,-h);
             glVertex2i(-w, h);
@@ -162,11 +181,11 @@ void menu(Game *game)
             r.bot = s->height - 120;
             r.left = s->width - 170;
             if (i == 5)
-    		ggprint16(&r, 35, 0x00ffffff, "   Key \" 1 \"");
+    		ggprint16(&r, 35, 0x00ffffff, "");
             if (i == 6)
-                ggprint16(&r, 35, 0x00ffffff, "   Key \" 2 \"");
+                ggprint16(&r, 35, 0x00ffffff, "");
             if (i == 7)
-                ggprint16(&r, 35, 0x00ffffff, "   Key \" Esc \"");
+                ggprint16(&r, 35, 0x00ffffff, "");
             glPopMatrix();
         }
     }
