@@ -156,19 +156,19 @@ void menu(Game *game)
             glVertex2i( w,-h);
             glEnd();
             if (i == 5)
-                ggprint16(&r, 35, 0x00ffffff, text[0]);
+                ggprint13(&r, 35, 0x00ffffff, text[0]);
             if (i == 6)
-                ggprint16(&r, 35, 0x00ffffff, text[1]);
+                ggprint13(&r, 35, 0x00ffffff, text[1]);
             if (i == 7)
-                ggprint16(&r, 35, 0x00ffffff, text[2]);
+                ggprint13(&r, 35, 0x00ffffff, text[2]);
             r.bot = s->height - 120;
             r.left = s->width - 170;
             if (i == 5)
-    		ggprint16(&r, 35, 0x00ffffff, "");
+    		ggprint13(&r, 35, 0x00ffffff, "");
             if (i == 6)
-                ggprint16(&r, 35, 0x00ffffff, "");
+                ggprint13(&r, 35, 0x00ffffff, "");
             if (i == 7)
-                ggprint16(&r, 35, 0x00ffffff, "");
+                ggprint13(&r, 35, 0x00ffffff, "");
             glPopMatrix();
         }
     }
