@@ -236,9 +236,11 @@ void movement(Game *game)
     clock_gettime(CLOCK_REALTIME, &dt);
     int randDirectionNumX, randDirectionNumY;
 
-    if (game->n <= 0)
-	return;
+    //std::cout << doge << std::endl;
+    //if (game->n <= 0)
+//	return;
 
+    //std::cout << doge << std::endl;
     while(d)
     {
 	double ts = timeDiff(&d->time, &dt);
@@ -324,118 +326,118 @@ void movement(Game *game)
 		game->afterDog = true;
 		return;
 	    }
-	    dd->s.center.y += dd->velocity.y;
-	    dd = dd->next;
 	}
+	dd->s.center.y += dd->velocity.y;
+	dd = dd->next;
+    }
 
-	while(fd)
+    while(fd)
+    {
+	if(fd->s.center.x + fd->s.width <= 0.0)
 	{
-	    if(fd->s.center.x + fd->s.width <= 0.0)
+	    game->waitForDog = true;
+	    deleteFreeDuck(game, fd);
+	    if(game->n == 0)
 	    {
-		game->waitForDog = true;
-		deleteFreeDuck(game, fd);
-		if(game->n == 0)
-		{
-		    game->afterDog = true;
-		    return;
-		}
-	    }
-	    if(fd->s.center.x - fd->s.width >= WINDOW_WIDTH)
-	    {
-		game->waitForDog = true;
-		deleteFreeDuck(game, fd);
-		if(game->n == 0)
-		{
-		    game->afterDog = true;
-		    return;
-		}
-	    }
-	    if(fd->velocity.y < 0.0)
-		fd->velocity.y *= -1.0;
-	    if(fd->s.center.y - fd->s.height >= WINDOW_HEIGHT)
-	    {
-		game->waitForDog = true;
-		deleteFreeDuck(game, fd);
-		if(game->n == 0)
-		{
-		    game->afterDog = true;
-		    return;
-		}
-	    }
-
-	    fd->s.center.x += fd->velocity.x;
-	    fd->s.center.y += fd->velocity.y;
-
-	    fd = fd->next;
-	}
-
-	while(doge)
-	{
-	    double ts = timeDiff(&doge->time, &dt);
-	    //std::cout << ts << std::endl;
-	    if(2.0 < ts && ts < 2.1)
-		doge->velocity.x = 0.0;
-	    if(3.0 < ts && ts < 3.1)
-		doge->velocity.x = 1.0;
-	    if(5.0 < ts && ts < 5.1)
-		doge->velocity.x = 0.0;
-	    if(6.0 < ts && ts < 6.1)
-	    {
-		doge->velocity.x = 1.5;
-		doge->velocity.y = 2.0;
-	    }
-	    if(6.5 < ts && ts < 6.6)
-	    {
-		doge->velocity.x = 0.5;
-		doge->velocity.y = -2.0;
-	    }
-	    if(doge->s.center.y - doge->s.height <= game->floor)
-	    {
-		deleteDog(game, doge);
-		//game->dogGone = true;
+		game->afterDog = true;
 		return;
 	    }
-	    doge->s.center.x += doge->velocity.x;
-	    doge->s.center.y += doge->velocity.y;
-
-	    doge = doge->next;
 	}
-
-	while(hdoge)
+	if(fd->s.center.x - fd->s.width >= WINDOW_WIDTH)
 	{
-	    double ts = timeDiff(&hdoge->time, &dt);
-	    if(0.5 < ts && ts < 0.6)
-		hdoge->velocity.y = 0.0;
-	    if(1.5 < ts && ts < 1.6)
-		hdoge->velocity.y = -2.0;
-	    if(hdoge->s.center.y - hdoge->s.height <= game->floor)
+	    game->waitForDog = true;
+	    deleteFreeDuck(game, fd);
+	    if(game->n == 0)
 	    {
-		deleteHappyDog(game, hdoge);
-		//game->afterDog = false;
+		game->afterDog = true;
 		return;
 	    }
-	    hdoge->s.center.y += hdoge->velocity.y;
-
-	    hdoge = hdoge->next;
 	}
-
-	while(ldoge)
+	if(fd->velocity.y < 0.0)
+	    fd->velocity.y *= -1.0;
+	if(fd->s.center.y - fd->s.height >= WINDOW_HEIGHT)
 	{
-	    double ts = timeDiff(&ldoge->time, &dt);
-	    if(0.5 < ts && ts < 0.6)
-		ldoge->velocity.y = 0.0;
-	    if(1.5 < ts && ts < 1.6)
-		ldoge->velocity.y = -2.0;
-	    if(ldoge->s.center.y - ldoge->s.height <= game->floor)
+	    game->waitForDog = true;
+	    deleteFreeDuck(game, fd);
+	    if(game->n == 0)
 	    {
-		deleteLaughingDog(game, ldoge);
-		//game->afterDog = false;
+		game->afterDog = true;
 		return;
 	    }
-	    ldoge->s.center.y += ldoge->velocity.y;
-
-	    ldoge = ldoge->next;
 	}
+
+	fd->s.center.x += fd->velocity.x;
+	fd->s.center.y += fd->velocity.y;
+
+	fd = fd->next;
+    }
+
+    while(doge)
+    {
+	double ts = timeDiff(&doge->time, &dt);
+	//std::cout << ts << std::endl;
+	if(2.0 < ts && ts < 2.1)
+	    doge->velocity.x = 0.0;
+	if(3.0 < ts && ts < 3.1)
+	    doge->velocity.x = 1.0;
+	if(5.0 < ts && ts < 5.1)
+	    doge->velocity.x = 0.0;
+	if(6.0 < ts && ts < 6.1)
+	{
+	    doge->velocity.x = 1.5;
+	    doge->velocity.y = 2.0;
+	}
+	if(6.5 < ts && ts < 6.6)
+	{
+	    doge->velocity.x = 0.5;
+	    doge->velocity.y = -2.0;
+	}
+	if(doge->s.center.y - doge->s.height <= game->floor)
+	{
+	    deleteDog(game, doge);
+	    //game->dogGone = true;
+	    return;
+	}
+	doge->s.center.x += doge->velocity.x;
+	doge->s.center.y += doge->velocity.y;
+
+	doge = doge->next;
+    }
+
+    while(hdoge)
+    {
+	double ts = timeDiff(&hdoge->time, &dt);
+	if(0.5 < ts && ts < 0.6)
+	    hdoge->velocity.y = 0.0;
+	if(1.5 < ts && ts < 1.6)
+	    hdoge->velocity.y = -2.0;
+	if(hdoge->s.center.y - hdoge->s.height <= game->floor)
+	{
+	    deleteHappyDog(game, hdoge);
+	    //game->afterDog = false;
+	    return;
+	}
+	hdoge->s.center.y += hdoge->velocity.y;
+
+	hdoge = hdoge->next;
+    }
+
+    while(ldoge)
+    {
+	double ts = timeDiff(&ldoge->time, &dt);
+	if(0.5 < ts && ts < 0.6)
+	    ldoge->velocity.y = 0.0;
+	if(1.5 < ts && ts < 1.6)
+	    ldoge->velocity.y = -2.0;
+	if(ldoge->s.center.y - ldoge->s.height <= game->floor)
+	{
+	    deleteLaughingDog(game, ldoge);
+	    //game->afterDog = false;
+	    return;
+	}
+	ldoge->s.center.y += ldoge->velocity.y;
+
+	ldoge = ldoge->next;
     }
 }
 
@@ -444,27 +446,27 @@ void deleteDuck(Game *game, Duck *node)
 {
     if(node->prev == NULL)
     {
-        if(node->next == NULL)
-        {
-            game->duck = NULL;
-        }
-        else
-        {
-            node->next->prev = NULL;
-            game->duck = node->next;
-        }
+	if(node->next == NULL)
+	{
+	    game->duck = NULL;
+	}
+	else
+	{
+	    node->next->prev = NULL;
+	    game->duck = node->next;
+	}
     }
     else
     {
-        if(node->next == NULL)
-        {
-            node->prev->next = NULL;
-        }
-        else
-        {
-            node->prev->next = node->next;
-            node->next->prev = node->prev;
-        }
+	if(node->next == NULL)
+	{
+	    node->prev->next = NULL;
+	}
+	else
+	{
+	    node->prev->next = node->next;
+	    node->next->prev = node->prev;
+	}
     }
     delete node;
     node = NULL;
@@ -475,27 +477,27 @@ void deleteDeadDuck(Game *game, deadDuck *node)
 {
     if(node->prev == NULL)
     {
-        if(node->next == NULL)
-        {
-            game->deadD = NULL;
-        }
-        else
-        {
-            node->next->prev = NULL;
-            game->deadD = node->next;
-        }
+	if(node->next == NULL)
+	{
+	    game->deadD = NULL;
+	}
+	else
+	{
+	    node->next->prev = NULL;
+	    game->deadD = node->next;
+	}
     }
     else
     {
-        if(node->next == NULL)
-        {
-            node->prev->next = NULL;
-        }
-        else
-        {
-            node->prev->next = node->next;
-            node->next->prev = node->prev;
-        }
+	if(node->next == NULL)
+	{
+	    node->prev->next = NULL;
+	}
+	else
+	{
+	    node->prev->next = node->next;
+	    node->next->prev = node->prev;
+	}
     }
     delete node;
     node = NULL;
@@ -506,27 +508,27 @@ void deleteFreeDuck(Game *game, freeDuck *node)
 {
     if(node->prev == NULL)
     {
-        if(node->next == NULL)
-        {
-            game->freeD = NULL;
-        }
-        else
-        {
-            node->next->prev = NULL;
-            game->freeD = node->next;
-        }
+	if(node->next == NULL)
+	{
+	    game->freeD = NULL;
+	}
+	else
+	{
+	    node->next->prev = NULL;
+	    game->freeD = node->next;
+	}
     }
     else
     {
-        if(node->next == NULL)
-        {
-            node->prev->next = NULL;
-        }
-        else
-        {
-            node->prev->next = node->next;
-            node->next->prev = node->prev;
-        }
+	if(node->next == NULL)
+	{
+	    node->prev->next = NULL;
+	}
+	else
+	{
+	    node->prev->next = node->next;
+	    node->next->prev = node->prev;
+	}
     }
     delete node;
     node = NULL;
@@ -537,27 +539,27 @@ void deleteDog(Game *game, Dog *node)
 {
     if(node->prev == NULL)
     {
-        if(node->next == NULL)
-        {
-            game->dog = NULL;
-        }
-        else
-        {
-            node->next->prev = NULL;
-            game->dog = node->next;
-        }
+	if(node->next == NULL)
+	{
+	    game->dog = NULL;
+	}
+	else
+	{
+	    node->next->prev = NULL;
+	    game->dog = node->next;
+	}
     }
     else
     {
-        if(node->next == NULL)
-        {
-            node->prev->next = NULL;
-        }
-        else
-        {
-            node->prev->next = node->next;
-            node->next->prev = node->prev;
-        }
+	if(node->next == NULL)
+	{
+	    node->prev->next = NULL;
+	}
+	else
+	{
+	    node->prev->next = node->next;
+	    node->next->prev = node->prev;
+	}
     }
     delete node;
     node = NULL;
@@ -569,27 +571,27 @@ void deleteHappyDog(Game *game, happyDog *node)
 {
     if(node->prev == NULL)
     {
-        if(node->next == NULL)
-        {
-            game->hdog = NULL;
-        }
-        else
-        {
-            node->next->prev = NULL;
-            game->hdog = node->next;
-        }
+	if(node->next == NULL)
+	{
+	    game->hdog = NULL;
+	}
+	else
+	{
+	    node->next->prev = NULL;
+	    game->hdog = node->next;
+	}
     }
     else
     {
-        if(node->next == NULL)
-        {
-            node->prev->next = NULL;
-        }
-        else
-        {
-            node->prev->next = node->next;
-            node->next->prev = node->prev;
-        }
+	if(node->next == NULL)
+	{
+	    node->prev->next = NULL;
+	}
+	else
+	{
+	    node->prev->next = node->next;
+	    node->next->prev = node->prev;
+	}
     }
     delete node;
     node = NULL;
@@ -601,27 +603,27 @@ void deleteLaughingDog(Game *game, laughingDog *node)
 {
     if(node->prev == NULL)
     {
-        if(node->next == NULL)
-        {
-            game->ldog = NULL;
-        }
-        else
-        {
-            node->next->prev = NULL;
-            game->ldog = node->next;
-        }
+	if(node->next == NULL)
+	{
+	    game->ldog = NULL;
+	}
+	else
+	{
+	    node->next->prev = NULL;
+	    game->ldog = node->next;
+	}
     }
     else
     {
-        if(node->next == NULL)
-        {
-            node->prev->next = NULL;
-        }
-        else
-        {
-            node->prev->next = node->next;
-            node->next->prev = node->prev;
-        }
+	if(node->next == NULL)
+	{
+	    node->prev->next = NULL;
+	}
+	else
+	{
+	    node->prev->next = node->next;
+	    node->next->prev = node->prev;
+	}
     }
     delete node;
     node = NULL;

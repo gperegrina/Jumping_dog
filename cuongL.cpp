@@ -28,7 +28,6 @@ int check_keys(XEvent *e, Game *game)
         if(key == XK_1)
         {
             game->menutest = false;
-            gameover = false;
             while(d)
             {
                 deleteDuck(game, d);
@@ -77,7 +76,6 @@ int check_keys(XEvent *e, Game *game)
         if(key == XK_2)
         {
             game->menutest = false;
-            gameover = false;
             while(d)
             {
                 deleteDuck(game, d);

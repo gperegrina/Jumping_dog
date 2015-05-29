@@ -11,7 +11,7 @@ void check_mouse(XEvent *e, Game *game)
     int y = WINDOW_HEIGHT - e->xbutton.y;
 
     Duck *d = game->duck;
-    Duck *saved = new Duck;;
+    Duck *saved = new Duck;
     struct timespec dt;
     clock_gettime(CLOCK_REALTIME, &dt);
     double ts;
@@ -21,7 +21,7 @@ void check_mouse(XEvent *e, Game *game)
     }
     if (e->type == ButtonPress) {
         if (e->xbutton.button==1) {
-#ifdef USE_SOUND //////////////////////////////////////////////////
+//#ifdef USE_SOUND //////////////////////////////////////////////////
           fmod_playsound(0);
             //Left button was pressed
             while(d)
@@ -31,7 +31,7 @@ void check_mouse(XEvent *e, Game *game)
                         y <= d->s.center.y + d->s.height &&
                         y >= d->s.center.y - d->s.height)
                 {
-                  fmod_playsound(1);
+                    fmod_playsound(1);
                     makeDeadDuck(game, d);
                     ts = timeDiff(&d->time, &dt);
                     if(ts < 1.5)
@@ -126,7 +126,7 @@ void check_mouse(XEvent *e, Game *game)
                 d = d->next;
             }
         }
-#endif
+//#endif
     }
     if (e->xbutton.button==3) {
         //Right button was pressed
