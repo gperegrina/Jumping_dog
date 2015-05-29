@@ -210,12 +210,9 @@ void render(Game *game)
     glEnd();
     if(!d && game->duckCount >= 10 && game->duckShot < 6)
     {
-        ggprint16(&r , 16, 0x00ffffff, "GAME OVER");
+        gameover = true;
     }
-    //ggprint16(&r , 16, 0x00ffffff, "%i / 10", game->duckShot);
     glPopMatrix();
-
-
 
     glColor3ub(90, 140, 90);
     s = &game->box[2];
@@ -249,7 +246,6 @@ void render(Game *game)
     ggprint16(&r , 16, 0x00ffffff, "%i", game->rounds);
     glPopMatrix();
 
-
     if(game->afterDog && game->onScreen == 0 && game->dogGone && game->n == 0 && game->waitForDog)
     {
         if(game->duckCaptured >= 1)
@@ -281,6 +277,9 @@ void render(Game *game)
             }
             game->oneDuck = false;
             game->twoDuck = false;
+            gameover = false;
+            std::cout << "Rounds: " << game->rounds << std::endl;
+            std::cout << "Score: " << game->score << std::endl;
             std::cout << "GAME OVER" << std::endl;
         }
         if(!d && game->oneDuck && game->duckCount < 10 && game->onScreen == 0 && game->n == 0)
@@ -308,31 +307,16 @@ void render(Game *game)
         h = d->s.height;
         x = d->s.center.x;
         y = d->s.center.y;
-        glBegin(GL_QUADS);
-        glVertex2f(x-w, y+h);
-        glVertex2f(x-w, y-h);
-        glVertex2f(x+w, y-h);
-        glVertex2f(x+w, y+h);
-        glEnd();
-        //This changes which duck it points to
-
+        d = d->next;
         show_duck= 1;
         float wid = 50.0f;
         duck_sprite.pos[0] = x;
         duck_sprite.pos[1] = y;
         duck_sprite.pos[2] = s->center.z;
-
-        d = d->next;
-        duck_sprite2.pos[0] = x;
-        duck_sprite2.pos[1] = y;
-        duck_sprite2.pos[2] = s->center.z;
-
-
+       
         if(show_duck) {
             glPushMatrix();
             glTranslatef(duck_sprite.pos[0], duck_sprite.pos[1], duck_sprite.pos[2]);
-            //remove if statement and make
-            //a while loop to take in both duck 
             if (silhouette)
             {
                 //glBind makes the duck texture
@@ -354,28 +338,6 @@ void render(Game *game)
                 glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
                 glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
             }
-            //Duck2
-            /*                          glTranslatef(duck_sprite2.pos[0], duck_sprite2.pos[1], duck_sprite2.pos[2]);
-                                        if (silhouette) 
-                                        {
-                                        glBindTexture(GL_TEXTURE_2D, duckTexture2);
-                                        glEnable(GL_ALPHA_TEST);
-                                        glAlphaFunc(GL_GREATER, 0.0f);
-                                        glColor4ub(255,255,255,255);
-                                        }
-                                        glBegin(GL_QUADS);
-                                        if (duck_sprite2.vel[0] > 0.0) {
-                                        glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
-                                        glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
-                                        glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
-                                        glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
-                                        } else {
-                                        glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
-                                        glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
-                                        glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
-                                        glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
-                                        }
-                                        */
             glEnd();
             glPopMatrix();
             //Transparent part
@@ -401,12 +363,6 @@ void render(Game *game)
         h = dd->s.height;
         x = dd->s.center.x;
         y = dd->s.center.y;
-        glBegin(GL_QUADS);
-        glVertex2f(x-w, y+h);
-        glVertex2f(x-w, y-h);
-        glVertex2f(x+w, y-h);
-        glVertex2f(x+w, y+h);
-        glEnd();
         r.bot = y + h;
         r.left = x - (w/2);
         if(ts < 0.3)
@@ -417,6 +373,50 @@ void render(Game *game)
                 ggprint16(&r , 16, 0x00ffffff, "100");
         }
         dd = dd->next;
+        show_duck= 1;
+        float wid = 50.0f;
+        duck_sprite3.pos[0] = x;
+        duck_sprite3.pos[1] = y;
+        duck_sprite3.pos[2] = s->center.z;
+
+        if(show_duck) {
+                glPushMatrix();
+                glTranslatef(duck_sprite3.pos[0], duck_sprite3.pos[1], duck_sprite3.pos[2]);
+                if (!silhouette)
+                {
+                        glBindTexture(GL_TEXTURE_2D, duckTexture3);
+                } else {
+                        glBindTexture(GL_TEXTURE_2D, duckSil3);
+                        glEnable(GL_ALPHA_TEST);
+                        glAlphaFunc(GL_GREATER, 0.0f);
+                        glColor4ub(255,255,255,255);
+                }
+                glBegin(GL_QUADS);
+                if (duck_sprite3.vel[0] > 0.0) {
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+                } else {
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+                }
+                glEnd();
+                glPopMatrix();
+                //Transparent part
+                if (trees && silhouette) {
+                        glBindTexture(GL_TEXTURE_2D, backgroundTransTexture);
+                        glBegin(GL_QUADS);
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i(0, WINDOW_HEIGHT);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i(WINDOW_WIDTH, WINDOW_HEIGHT);
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i(WINDOW_WIDTH, 0);
+                        glEnd();
+                }
+                glDisable(GL_ALPHA_TEST);
+        }
     }
 
     glColor3ub(0, 0, 255);
@@ -426,13 +426,52 @@ void render(Game *game)
         h = fd->s.height;
         x = fd->s.center.x;
         y = fd->s.center.y;
-        glBegin(GL_QUADS);
-        glVertex2f(x-w, y+h);
-        glVertex2f(x-w, y-h);
-        glVertex2f(x+w, y-h);
-        glVertex2f(x+w, y+h);
-        glEnd();
         fd = fd->next;
+        show_duck= 1;
+        float wid = 50.0f;
+        duck_sprite5.pos[0] = x;
+        duck_sprite5.pos[1] = y;
+        duck_sprite5.pos[2] = s->center.z;
+        
+        if(show_duck) {
+                glPushMatrix();
+                glTranslatef(duck_sprite5.pos[0], duck_sprite5.pos[1], duck_sprite5.pos[2]);
+                if (!silhouette)
+                {
+                        glBindTexture(GL_TEXTURE_2D, duckTexture5);
+                } else {
+                        glBindTexture(GL_TEXTURE_2D, duckSil5);
+                        glEnable(GL_ALPHA_TEST);
+                        glAlphaFunc(GL_GREATER, 0.0f);
+                        glColor4ub(255,255,255,255);
+                }
+
+                glBegin(GL_QUADS);
+                if (duck_sprite5.vel[0] > 0.0) {
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+                } else {
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+                }
+                glEnd();
+                glPopMatrix();
+                //Transparent part
+                if (trees && silhouette) {
+                        glBindTexture(GL_TEXTURE_2D, backgroundTransTexture);
+                        glBegin(GL_QUADS);
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i(0, WINDOW_HEIGHT);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i(WINDOW_WIDTH, WINDOW_HEIGHT);
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i(WINDOW_WIDTH, 0);
+                        glEnd();
+                }
+                glDisable(GL_ALPHA_TEST);
+        }
     }
 
     if(game->animateDog)
@@ -447,13 +486,37 @@ void render(Game *game)
         h = doge->s.height;
         x = doge->s.center.x;
         y = doge->s.center.y;
-        glBegin(GL_QUADS);
-        glVertex2f(x-w, y+h);
-        glVertex2f(x-w, y-h);
-        glVertex2f(x+w, y-h);
-        glVertex2f(x+w, y+h);
-        glEnd();
         doge = doge->next;
+        show_dog= 1;
+        float wid = 50.0f;
+        dog_sprite1.pos[0] = x;
+        dog_sprite1.pos[1] = y;
+        dog_sprite1.pos[2] = s->center.z;
+
+        if(show_dog) {
+                glPushMatrix();
+                glTranslatef(dog_sprite1.pos[0], dog_sprite1.pos[1], dog_sprite1.pos[2]);
+                glBindTexture(GL_TEXTURE_2D, dogTexture1); //test
+                        glBindTexture(GL_TEXTURE_2D, dogSil1);
+                        glEnable(GL_ALPHA_TEST);
+                        glAlphaFunc(GL_GREATER, 0.0f);
+                        glColor4ub(255,255,255,255);
+                glBegin(GL_QUADS);
+                if (dog_sprite1.vel[0] > 0.0) {
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+                } else {
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+                }
+                glEnd();
+                glPopMatrix();
+                glDisable(GL_ALPHA_TEST);
+        }
     }
 
     glColor3ub(100, 100, 255);
@@ -463,13 +526,52 @@ void render(Game *game)
         h = hdoge->s.height;
         x = hdoge->s.center.x;
         y = hdoge->s.center.y;
-        glBegin(GL_QUADS);
-        glVertex2f(x-w, y+h);
-        glVertex2f(x-w, y-h);
-        glVertex2f(x+w, y-h);
-        glVertex2f(x+w, y+h);
-        glEnd();
         hdoge = hdoge->next;
+        show_dog= 1;
+        float wid = 50.0f;
+        dog_sprite2.pos[0] = x;
+        dog_sprite2.pos[1] = y;
+        dog_sprite2.pos[2] = s->center.z;
+
+        if(show_dog) {
+                glPushMatrix();
+                glTranslatef(dog_sprite2.pos[0], dog_sprite2.pos[1], dog_sprite2.pos[2]);
+                if (!silhouette)
+                {
+                        glBindTexture(GL_TEXTURE_2D, dogTexture2);
+                } else {
+                        glBindTexture(GL_TEXTURE_2D, dogSil2);
+                        glEnable(GL_ALPHA_TEST);
+                        glAlphaFunc(GL_GREATER, 0.0f);
+                        glColor4ub(255,255,255,255);
+                }
+
+                glBegin(GL_QUADS);
+                if (dog_sprite2.vel[0] > 0.0) {
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+                } else {
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+                }
+                glEnd();
+                glPopMatrix();
+                //Transparent part
+                if (trees && silhouette) {
+                        glBindTexture(GL_TEXTURE_2D, backgroundTransTexture);
+                        glBegin(GL_QUADS);
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i(0, WINDOW_HEIGHT);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i(WINDOW_WIDTH, WINDOW_HEIGHT);
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i(WINDOW_WIDTH, 0);
+                        glEnd();
+                }
+                glDisable(GL_ALPHA_TEST);
+        }
     }
 
     glColor3ub(255, 100, 100);
@@ -479,12 +581,51 @@ void render(Game *game)
         h = ldoge->s.height;
         x = ldoge->s.center.x;
         y = ldoge->s.center.y;
-        glBegin(GL_QUADS);
-        glVertex2f(x-w, y+h);
-        glVertex2f(x-w, y-h);
-        glVertex2f(x+w, y-h);
-        glVertex2f(x+w, y+h);
-        glEnd();
         ldoge = ldoge->next;
+        show_dog= 1;
+        float wid = 50.0f;
+        dog_sprite3.pos[0] = x;
+        dog_sprite3.pos[1] = y;
+        dog_sprite3.pos[2] = s->center.z;
+
+        if(show_dog) {
+                glPushMatrix();
+                glTranslatef(dog_sprite3.pos[0], dog_sprite3.pos[1], dog_sprite3.pos[2]);
+                if (!silhouette)
+                {
+                        glBindTexture(GL_TEXTURE_2D, dogTexture3);
+                } else {
+                        glBindTexture(GL_TEXTURE_2D, dogSil3);
+                        glEnable(GL_ALPHA_TEST);
+                        glAlphaFunc(GL_GREATER, 0.0f);
+                        glColor4ub(255,255,255,255);
+                }
+
+                glBegin(GL_QUADS);
+                if (dog_sprite3.vel[0] > 0.0) {
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+                } else {
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+                }
+                glEnd();
+                glPopMatrix();
+                //Transparent part
+                if (trees && silhouette) {
+                        glBindTexture(GL_TEXTURE_2D, backgroundTransTexture);
+                        glBegin(GL_QUADS);
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i(0, WINDOW_HEIGHT);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i(WINDOW_WIDTH, WINDOW_HEIGHT);
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i(WINDOW_WIDTH, 0);
+                        glEnd();
+                }
+                glDisable(GL_ALPHA_TEST);
+        }
     }
 }
