@@ -35,8 +35,39 @@ Sprite duck_sprite2;
 Ppmimage *duckImage2=NULL;
 GLuint duckTexture2;
 GLuint duckSil2;
+/Third Duck Sprite
+Sprite duck_sprite3;
+Ppmimage *duckImage3=NULL;
+GLuint duckTexture3;
+GLuint duckSil3;
+//Fourth Duck Sprite
+Sprite duck_sprite4;
+Ppmimage *duckImage4=NULL;
+GLuint duckTexture4;
+GLuint duckSil4;
+//Fifth Duck Sprite
+Sprite duck_sprite5;
+Ppmimage *duckImage5=NULL;
+GLuint duckTexture5;
+GLuint duckSil5;
+//First Dog Sprite
+Sprite dog_sprite1;
+Ppmimage *dogImage1=NULL;
+GLuint dogTexture1;
+GLuint dogSil1;
+//Second Dog Sprite
+Sprite dog_sprite2;
+Ppmimage *dogImage2=NULL;
+GLuint dogTexture2;
+GLuint dogSil2;
+//Third Dog Sprite
+Sprite dog_sprite3;
+Ppmimage *dogImage3=NULL;
+GLuint dogTexture3;
+GLuint dogSil3;
 int show_duck = 0;
 int silhouette = 1;
+int show_dog = 0;
 //Bullet Sprite
 Sprite bullet_sprite;
 Ppmimage *bulletImage=NULL;
