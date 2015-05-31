@@ -156,7 +156,7 @@ void init_opengl(void)
     //duck sprite
     glGenTextures(1, &duckTexture);
     glGenTextures(1, &duckSil);
-    duckImage = ppm6GetImage("./images/duck.ppm");
+    duckImage = ppm6GetImage("./images/ducks1.ppm");
     int w = duckImage->width;
     int h = duckImage->height;
     glBindTexture(GL_TEXTURE_2D, duckTexture);
