@@ -317,13 +317,16 @@ void render(Game *game)
         if(show_duck) {
             glPushMatrix();
             glTranslatef(duck_sprite.pos[0], duck_sprite.pos[1], duck_sprite.pos[2]);
-            if (silhouette)
+           
+            if (!silhouette)
             {
-                //glBind makes the duck texture
                 glBindTexture(GL_TEXTURE_2D, duckTexture);
-                glEnable(GL_ALPHA_TEST);
-                glAlphaFunc(GL_GREATER, 0.0f);
-                glColor4ub(255,255,255,255);
+            } else {
+                 glBindTexture(GL_TEXTURE_2D, duckSil);
+                 glEnable(GL_ALPHA_TEST);
+                 glAlphaFunc(GL_GREATER, 0.0f);
+                 glColor4ub(255,255,255,255);
+
             }
 
             glBegin(GL_QUADS);
