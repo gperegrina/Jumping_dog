@@ -7,7 +7,68 @@
 
 #include "header.h"
 
-     
+/*
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//New code for the splashscreen
+Ppmimage *menuImage = NULL; //for menu splashscreen
+GLuint menuTexture;//menu splashcreen
+int menu = 1;// menu
+menuImage = ppm6GetImage("./images/menu.ppm");// menu splashscreen
+glGenTextures(1, &menuTexture);//menu
+
+//menu splashscreen
+    glBindTexture(GL_TEXTURE_2D, menuTexture);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3,
+                            menuImage->width, menuImage->height,
+                            0, GL_RGB, GL_UNSIGNED_BYTE, menuImage->data);
+
+    //-------------------------------------------------------------------
+
+// press s to start the game
+        if(key == XK_s)
+        {
+
+            menu ^= 1;
+            //return  ;
+            
+        }
+
+void render(Game *game)
+if (menu) {
+
+        glBindTexture(GL_TEXTURE_2D, menuTexture);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+        glTexCoord2f(0.0f, 0.0f); glVertex2i(0, WINDOW_HEIGHT);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(WINDOW_WIDTH, WINDOW_HEIGHT);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(WINDOW_WIDTH, 0);
+        glEnd();
+    }
+
+ if (!menu){
+    if(background) {
+        glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+        glTexCoord2f(0.0f, 0.0f); glVertex2i(0, WINDOW_HEIGHT);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(WINDOW_WIDTH, WINDOW_HEIGHT);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(WINDOW_WIDTH, 0);
+        glEnd();
+    }
+     if(gameover) {
+        glBindTexture(GL_TEXTURE_2D, gameoverbgTexture);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+        glTexCoord2f(0.0f, 0.0f); glVertex2i(0, WINDOW_HEIGHT);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(WINDOW_WIDTH, WINDOW_HEIGHT);
+   //////////////////////////////////// The whole render
+     }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  */
 
 int check_keys(XEvent *e, Game *game) 
 {
