@@ -301,7 +301,7 @@ void init_opengl(void)
 	//Dog sprite 2
 	glGenTextures(1, &dogTexture2);
 	glGenTextures(1, &dogSil2);
-	dogImage2 = ppm6GetImage("./images/dogz2.ppm");
+	dogImage2 = ppm6GetImage("./images/dogs21.ppm");
 	int w11 = dogImage2->width;
 	int h11 = dogImage2->height;
 	glBindTexture(GL_TEXTURE_2D, dogTexture2);
