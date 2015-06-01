@@ -65,9 +65,15 @@ Sprite dog_sprite3;
 Ppmimage *dogImage3=NULL;
 GLuint dogTexture3;
 GLuint dogSil3;
+//Third Dog Sprite
+Sprite dog_sprite4;
+Ppmimage *dogImage4=NULL;
+GLuint dogTexture4;
+GLuint dogSil4;
 int show_duck = 0;
 int silhouette = 1;
 int show_dog = 0;
+bool jumpingdog = 0;
 //Bullet Sprite
 Sprite bullet_sprite;
 Ppmimage *bulletImage=NULL;

@@ -16,6 +16,7 @@ int menu = 1;// menu
 menuImage = ppm6GetImage("./images/menu.ppm");// menu splashscreen
 glGenTextures(1, &menuTexture);//menu
 
+
 //menu splashscreen
     glBindTexture(GL_TEXTURE_2D, menuTexture);
     //

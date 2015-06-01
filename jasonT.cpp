@@ -386,11 +386,13 @@ void movement(Game *game)
 	{
 	    doge->velocity.x = 1.5;
 	    doge->velocity.y = 2.0;
+	    jumpingdog = true;
 	}
 	if(6.5 < ts && ts < 6.6)
 	{
 	    doge->velocity.x = 0.5;
 	    doge->velocity.y = -2.0;
+	    jumpingdog = false;
 	}
 	if(doge->s.center.y - doge->s.height <= game->floor)
 	{

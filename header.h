@@ -107,6 +107,11 @@ extern Sprite dog_sprite3;
 extern Ppmimage *dogImage3;
 extern GLuint dogTexture3;
 extern GLuint dogSil3;
+//Fourth Dog Sprite
+extern Sprite dog_sprite4;
+extern Ppmimage *dogImage4;
+extern GLuint dogTexture4;
+extern GLuint dogSil4;
 //Bullet Sprite
 extern Sprite bullet_sprite;
 extern Ppmimage *bulletImage;
@@ -361,6 +366,6 @@ extern GLuint backgroundTransTexture;
 extern GLuint gameoverbgTexture;
 extern int trees;
 extern bool gameover;
-
+extern bool jumpingdog;
 
 #endif

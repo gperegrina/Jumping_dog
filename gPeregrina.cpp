@@ -325,6 +325,41 @@ void init_opengl(void)
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, w12, h12, 0, GL_RGB, GL_UNSIGNED_BYTE, dogImage3->data);
 	//-------------------------------------------------------------------
 
+
+	//-------------------------------------------------------------------
+	//Dog sprite 4
+	glGenTextures(1, &dogTexture4);
+	glGenTextures(1, &dogSil4);
+	dogImage4 = ppm6GetImage("./images/dog1.ppm");
+	int w17 = dogImage4->width;
+	int h17 = dogImage4->height;
+	glBindTexture(GL_TEXTURE_2D, dogTexture4);
+	//
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, w17, h17, 0, GL_RGB, GL_UNSIGNED_BYTE, dogImage4->data);
+	//-------------------------------------------------------------------
+
+   	 //-------------------------------------------------------------------
+	//Dog silhouette 4
+	glBindTexture(GL_TEXTURE_2D, dogSil4);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	////must build a new set of data...
+	unsigned char *silhouetteData17 = buildAlphaData(dogImage4);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w17, h17, 0,
+	GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData17);
+	delete [] silhouetteData17;
+	//-------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
     //-------------------------------------------------------------------
 	//Dog silhouette 1
 	glBindTexture(GL_TEXTURE_2D, dogSil1);

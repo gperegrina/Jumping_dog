@@ -84,10 +84,13 @@ void render(Game *game)
     }
     if (game->bullets == 0) {
         num = 0, dist = 0;
+	bullet_sprite.pos[0] = 0;
+	bullet_sprite.pos[1] = 0;
+	bullet_sprite.pos[2] = 0;
     }
     if (game->bullets != 0) {
         for (int i=0;i<num;i++) {
-            bullet_sprite.pos[0] = dist - (i * 20);
+    		        bullet_sprite.pos[0] = dist - (i * 20);
             bullet_sprite.pos[1] = 40;
             bullet_sprite.pos[2] = 0;
             float wid = 10.0f;
@@ -520,11 +523,39 @@ void render(Game *game)
                 glPopMatrix();
                 glDisable(GL_ALPHA_TEST);
         }
+        dog_sprite4.pos[0] = x;
+        dog_sprite4.pos[1] = y;
+        dog_sprite4.pos[2] = s->center.z;
+	if(jumpingdog) {
+                glPushMatrix();
+                glTranslatef(dog_sprite4.pos[0], dog_sprite4.pos[1], dog_sprite4.pos[2]);
+                glBindTexture(GL_TEXTURE_2D, dogTexture4); //test
+                        glBindTexture(GL_TEXTURE_2D, dogSil4);
+                        glEnable(GL_ALPHA_TEST);
+                        glAlphaFunc(GL_GREATER, 0.0f);
+                        glColor4ub(255,255,255,255);
+                glBegin(GL_QUADS);
+                if (dog_sprite4.vel[0] > 0.0) {
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+                } else {
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+                }
+                glEnd();
+                glPopMatrix();
+                glDisable(GL_ALPHA_TEST);
+	}
     }
 
     glColor3ub(100, 100, 255);
     while(hdoge)
     {
+	//fmod_playsound(1);
         w = hdoge->s.width;
         h = hdoge->s.height;
         x = hdoge->s.center.x;

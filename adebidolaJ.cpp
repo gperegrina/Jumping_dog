@@ -31,7 +31,7 @@ void check_mouse(XEvent *e, Game *game)
                         y <= d->s.center.y + d->s.height &&
                         y >= d->s.center.y - d->s.height)
                 {
-                    fmod_playsound(1);
+//                    fmod_playsound(1);
                     makeDeadDuck(game, d);
                     ts = timeDiff(&d->time, &dt);
                     if(ts < 1.5)
